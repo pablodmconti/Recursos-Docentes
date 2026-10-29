@@ -7,7 +7,7 @@ Materiales interactivos de Pablo Montaña para usar en clase, ordenados por año
 | Año | Grupo | Curso | Recurso |
 | --- | --- | --- | --- |
 | 2026 | 9° EBI | Ciencias de la Computación | Sin recursos todavía |
-| 2026 | 1° EMS | Ciencias Computacionales y Tecnologías Digitales | [Del pseudocódigo a Python](2026/1ems/del-pseudocodigo-a-python/index.html) · [Planificación](2026/1ems/del-pseudocodigo-a-python/planificacion.docx) |
+| 2026 | 1° EMS | Ciencias Computacionales y Tecnologías Digitales | [Del pseudocódigo a Python](2026/1ems/del-pseudocodigo-a-python/index.html) |
 | 2026 | 3° MF | Ingeniería del Software (práctica didáctica) | Sin recursos todavía |
 
 ## Estructura
@@ -24,9 +24,8 @@ recursos-docentes/
     │   └── index.html                      página del grupo: sus recursos
     ├── 1ems/
     │   ├── index.html
-    │   └── del-pseudocodigo-a-python/      una carpeta por recurso
-    │       ├── index.html                  el recurso interactivo
-    │       └── planificacion.docx          la planificación de la clase
+    │   └── del-pseudocodigo-a-python/      una carpeta por actividad
+    │       └── index.html                  la actividad interactiva
     └── 3mf/
         └── index.html                      práctica didáctica
 ```
@@ -36,9 +35,8 @@ recursos-docentes/
 **Un recurso nuevo**
 
 1. Crear su carpeta dentro del grupo. Desde la web de GitHub: **Add file → Create new file** y escribir la ruta completa, por ejemplo `2026/1ems/estructuras-de-control/index.html`. Cada `/` crea una carpeta.
-2. Subir la planificación a la misma carpeta con **Add file → Upload files**.
-3. En la página del grupo (`2026/1ems/index.html`), copiar una tarjeta de recurso y cambiar el título, la descripción y los enlaces. En un grupo sin recursos, reemplazar el recuadro "Todavía no hay recursos" por la tarjeta.
-4. Actualizar el contador del grupo en la página del año y agregar la fila en este README.
+2. En la página del grupo (`2026/1ems/index.html`), copiar una tarjeta de recurso y cambiar el título, la descripción y los enlaces. En un grupo sin recursos, reemplazar el recuadro "Todavía no hay recursos" por la tarjeta.
+3. Actualizar el contador del grupo en la página del año y agregar la fila en este README.
 
 **Un grupo nuevo**
 
