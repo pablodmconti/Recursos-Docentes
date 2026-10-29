@@ -7,98 +7,25 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,800&family=JetBrains+Mono:wght@600&display=swap">
-<style>
-/* Portada: cuaderno cuadriculado. Primero el año, después cada grupo con sus recursos en tarjetas. */
-:root {
-  --paper: #f5f7fb; --grid: rgba(36, 83, 166, 0.075); --surface: #ffffff; --ink: #15213b; --muted: #55627d;
-  --line: #d5dceb; --blue: #2453a6; --blue-soft: #e4ecfb; --marker: #ffe27a; --run: #ffd23f; --run-ink: #15213b;
-  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
-  --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
-  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
-  color-scheme: light;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --paper: #0d1423; --grid: rgba(140, 172, 235, 0.06); --surface: #141e33; --ink: #e5ebf7; --muted: #9ba9c4;
-    --line: #2a3755; --blue: #82abff; --blue-soft: #1b2a4a; --marker: rgba(255, 214, 72, 0.32);
-    color-scheme: dark;
-  }
-}
-* { box-sizing: border-box; }
-body {
-  margin: 0; color: var(--ink); font-family: var(--body); font-size: 1rem; line-height: 1.6;
-  background-color: var(--paper);
-  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-  background-size: 24px 24px;
-}
-.wrap {
-  max-width: 860px; margin: 0 auto; padding-block: 48px 64px;
-  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
-  display: grid; gap: 48px;
-}
-h1, h2, h3 { font-family: var(--display); line-height: 1.15; margin: 0; text-wrap: balance; }
-h1 { font-size: clamp(2.1rem, 6vw, 3.2rem); font-weight: 800; letter-spacing: -0.02em; }
-h3 { font-size: 1.15rem; font-weight: 800; }
-p { margin: 0; max-width: 65ch; }
-.eyebrow { font-size: 0.875rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--blue); }
-.mark { background: linear-gradient(transparent 55%, var(--marker) 55%); padding: 0 0.1em; }
-header { display: grid; gap: 14px; }
-header p { color: var(--muted); font-size: 1.125rem; }
-
-/* Año */
-.year { display: grid; gap: 28px; }
-.year-head { display: flex; align-items: baseline; gap: 14px; border-bottom: 2px solid var(--ink); padding-bottom: 8px; }
-.year-head h2 { font-family: var(--mono); font-size: clamp(2rem, 7vw, 2.75rem); font-weight: 600; letter-spacing: -0.02em; }
-.year-head span { color: var(--muted); font-size: 0.95rem; }
-
-/* Grupo */
-.group { display: grid; gap: 14px; }
-.group-head { display: grid; gap: 2px; }
-.group-head h3 { display: flex; align-items: center; gap: 10px; }
-.group-head h3::before { content: ""; width: 10px; height: 10px; border-radius: 3px; background: var(--blue); flex: none; }
-.group-head p { color: var(--muted); font-size: 0.95rem; padding-left: 20px; }
-
-.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 16px; }
-.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px; display: grid; gap: 12px; align-content: start; }
-.card .tag { justify-self: start; font-family: var(--mono); font-size: 0.75rem; color: var(--blue); background: var(--blue-soft); padding: 2px 8px; border-radius: 6px; }
-.card h4 { font-family: var(--display); font-size: 1.15rem; font-weight: 800; margin: 0; line-height: 1.2; }
-.card p { color: var(--muted); font-size: 0.95rem; }
-.links { display: flex; flex-wrap: wrap; gap: 10px; }
-.links a { text-decoration: none; font-weight: 700; font-size: 0.9rem; border-radius: 8px; padding: 8px 14px; }
-.links a.main { background: var(--run); color: var(--run-ink); }
-.links a.sec { color: var(--blue); border: 1px solid var(--line); }
-.links a:hover { filter: brightness(0.97); }
-a:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
-footer { color: var(--muted); font-size: 0.875rem; border-top: 1px solid var(--line); padding-top: 16px; }
-</style>
+<link rel="stylesheet" href="assets/estilos.css">
 </head>
 <body>
 <div class="wrap">
   <header>
     <div class="eyebrow">Prof. Pablo Montaña</div>
     <h1>Recursos <span class="mark">docentes</span></h1>
-    <p>Materiales interactivos para usar en clase, ordenados por año y por grupo. Cada recurso funciona en el navegador, sin instalar nada.</p>
+    <p class="lead">Materiales interactivos para usar en clase, ordenados por año y por grupo. Elijan el año para ver los grupos.</p>
   </header>
 
-  <section class="year" aria-labelledby="y-2026">
-    <div class="year-head"><h2 id="y-2026">2026</h2><span>1 grupo · 1 recurso</span></div>
-
-    <div class="group" aria-labelledby="g-2026-1ems">
-      <div class="group-head">
-        <h3 id="g-2026-1ems">1° EMS</h3>
-        <p>Ciencias Computacionales y Tecnologías Digitales · Espacio optativo</p>
-      </div>
-      <div class="cards">
-        <article class="card">
-          <span class="tag">Python · 80 min</span>
-          <h4>Del pseudocódigo a Python</h4>
-          <p>Escalera de lenguajes, seis pasos guiados con editor de Python, desafíos para completar y registro del trabajo en PDF.</p>
-          <div class="links">
-            <a class="main" href="2026/1ems/del-pseudocodigo-a-python/">Abrir recurso</a>
-            <a class="sec" href="2026/1ems/del-pseudocodigo-a-python/planificacion.docx">Planificación (Word)</a>
-          </div>
-        </article>
-      </div>
+  <section aria-labelledby="h-anios">
+    <h2 id="h-anios" class="eyebrow">Años</h2>
+    <div class="cards" style="margin-top: 12px;">
+      <a class="card year" href="2026/">
+        <span class="year-num">2026</span>
+        <span class="count">3 grupos · 1 recurso</span>
+        <p>9° EBI, 1° EMS y 3° MF (práctica didáctica).</p>
+        <span class="go">Ver grupos →</span>
+      </a>
     </div>
   </section>
 

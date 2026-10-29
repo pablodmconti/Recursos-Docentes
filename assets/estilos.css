@@ -1,0 +1,100 @@
+/* Recursos docentes · estilos compartidos de la portada, los años y los grupos.
+   Cuaderno cuadriculado: una columna de lectura y tarjetas para cada año, grupo o recurso. */
+:root {
+  --paper: #f5f7fb;
+  --grid: rgba(36, 83, 166, 0.075);
+  --surface: #ffffff;
+  --ink: #15213b;
+  --muted: #55627d;
+  --line: #d5dceb;
+  --blue: #2453a6;
+  --blue-soft: #e4ecfb;
+  --marker: #ffe27a;
+  --run: #ffd23f;
+  --run-ink: #15213b;
+  --practice: #7a4c00;
+  --practice-soft: #fff1d1;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #0d1423; --grid: rgba(140, 172, 235, 0.06); --surface: #141e33; --ink: #e5ebf7; --muted: #9ba9c4;
+    --line: #2a3755; --blue: #82abff; --blue-soft: #1b2a4a; --marker: rgba(255, 214, 72, 0.32);
+    --practice: #ffcf7a; --practice-soft: #3a2a0c;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; color: var(--ink); font-family: var(--body); font-size: 1rem; line-height: 1.6;
+  background-color: var(--paper);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+.wrap {
+  max-width: 860px; margin: 0 auto; padding-block: 40px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 40px;
+}
+h1, h2, h3 { font-family: var(--display); line-height: 1.15; margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(2.1rem, 6vw, 3.2rem); font-weight: 800; letter-spacing: -0.02em; }
+h2 { font-size: 1.4rem; font-weight: 800; }
+h3 { font-size: 1.2rem; font-weight: 800; }
+p { margin: 0; max-width: 65ch; }
+a:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; border-radius: 4px; }
+.eyebrow { font-size: 0.875rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--blue); }
+.mark { background: linear-gradient(transparent 55%, var(--marker) 55%); padding: 0 0.1em; }
+
+/* Encabezado y migas */
+header { display: grid; gap: 12px; }
+header .lead { color: var(--muted); font-size: 1.125rem; }
+.crumbs { display: flex; flex-wrap: wrap; gap: 6px; font-size: 0.875rem; color: var(--muted); }
+.crumbs a { color: var(--blue); font-weight: 700; text-decoration: none; }
+.crumbs a:hover { text-decoration: underline; }
+.crumbs span[aria-hidden] { color: var(--line); }
+.year-num { font-family: var(--mono); font-weight: 600; letter-spacing: -0.03em; }
+
+/* Tarjetas */
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 16px; }
+.card {
+  position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px;
+  display: grid; gap: 10px; align-content: start; color: inherit; text-decoration: none;
+}
+a.card:hover { border-color: var(--blue); }
+a.card:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+.card p { color: var(--muted); font-size: 0.95rem; }
+.card .go { font-weight: 700; color: var(--blue); font-size: 0.9rem; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { font-family: var(--mono); font-size: 0.75rem; color: var(--blue); background: var(--blue-soft); padding: 2px 8px; border-radius: 6px; }
+.tag.practice { font-family: var(--body); font-weight: 700; color: var(--practice); background: var(--practice-soft); }
+.count { font-size: 0.875rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* Tarjeta de año */
+.card.year { gap: 6px; }
+.card.year .year-num { font-size: clamp(2.6rem, 9vw, 3.4rem); line-height: 1; color: var(--ink); }
+
+/* Aviso de práctica didáctica */
+.note { border-left: 4px solid var(--practice); background: var(--practice-soft); padding: 12px 16px; border-radius: 0 10px 10px 0; display: grid; gap: 2px; }
+.note strong { color: var(--practice); }
+
+/* Recursos de un grupo */
+.links { display: flex; flex-wrap: wrap; gap: 10px; }
+.links a { text-decoration: none; font-weight: 700; font-size: 0.9rem; border-radius: 8px; padding: 8px 14px; }
+.links a.main { background: var(--run); color: var(--run-ink); }
+.links a.sec { color: var(--blue); border: 1px solid var(--line); }
+.links a:hover { filter: brightness(0.97); }
+.empty { background: var(--surface); border: 1px dashed var(--line); border-radius: 12px; padding: 24px 20px; color: var(--muted); }
+
+dl.facts { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 16px; margin: 0; font-size: 0.95rem; }
+dl.facts dt { color: var(--muted); }
+dl.facts dd { margin: 0; }
+
+footer { color: var(--muted); font-size: 0.875rem; border-top: 1px solid var(--line); padding-top: 16px; }
+
+@media (max-width: 560px) {
+  dl.facts { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  dl.facts dd { margin-bottom: 8px; }
+}
