@@ -701,6 +701,7 @@ p code, li code, td code { color: var(--yellow); }
     let t = null;
     ta.addEventListener('input', function () {
       rows();
+      syncPrintExercise(ex);
       clearTimeout(t);
       t = setTimeout(function () { store.set('code:' + ex.id, ta.value); }, 300);
     });
@@ -721,7 +722,7 @@ p code, li code, td code { color: var(--yellow); }
     bHint.addEventListener('click', function () {
       pista.hidden = !pista.hidden;
       bHint.setAttribute('aria-expanded', String(!pista.hidden));
-      if (!pista.hidden && !state[ex.id].pista) { state[ex.id].pista = true; save(ex); }
+      if (!pista.hidden && !state[ex.id].pista) { state[ex.id].pista = true; save(ex); syncPrintExercise(ex); }
     });
     paintState(ex);
     return box;
@@ -734,6 +735,33 @@ p code, li code, td code { color: var(--yellow); }
     u.box.classList.toggle('is-solved', s.solved);
     u.badge.className = 'badge' + (s.solved ? ' ok' : '');
     u.badge.textContent = s.solved ? '✓ Resuelto' : (s.attempts ? 'Intentos: ' + s.attempts : 'Sin resolver');
+    syncPrintExercise(ex);
+  }
+
+  /* La versión para imprimir se mantiene siempre al día, sin depender del evento beforeprint
+     (Safari, iPad y algunos celulares no lo disparan o lo hacen tarde). */
+  function syncPrintExercise(ex) {
+    const s = state[ex.id], u = ui[ex.id];
+    if (!u) return;
+    const code = u.ta.value.trim();
+    u.printCode.textContent = code && code !== 'print()' ? u.ta.value.replace(/\s+$/, '') : '(sin responder)';
+    u.printState.textContent = (s.solved ? '✓ Resuelto' : '✗ Sin resolver') +
+      (s.attempts ? ' · ' + s.attempts + (s.attempts === 1 ? ' intento' : ' intentos') : '') +
+      (s.pista ? ' · usó la pista' : '');
+  }
+  function syncPrintHeader() {
+    const name = document.getElementById('studentName').value.trim();
+    document.getElementById('printNameValue').textContent = name;
+    const hoy = new Date();
+    document.getElementById('printDateValue').textContent =
+      ('0' + hoy.getDate()).slice(-2) + '/' + ('0' + (hoy.getMonth() + 1)).slice(-2) + '/' + hoy.getFullYear();
+    const n = ALL.filter(function (ex) { return state[ex.id].solved; }).length;
+    document.getElementById('printSummary').textContent =
+      'Resueltos: ' + n + '/' + TOTAL + ' (' + Math.round(n / TOTAL * 100) + '%) — Nota: ' + (n / TOTAL * 10).toFixed(1) + ' / 10';
+  }
+  function syncPrint() {
+    syncPrintHeader();
+    ALL.forEach(syncPrintExercise);
   }
 
   function setBusy(on) {
@@ -881,35 +909,38 @@ p code, li code, td code { color: var(--yellow); }
     } else {
       comp.hidden = true;
     }
+    syncPrintHeader();
   }
 
   /* ---------------- Nombre e impresión ---------------- */
   const nameInput = document.getElementById('studentName');
   const savedName = store.get('nombre');
   if (savedName) nameInput.value = savedName;
-  nameInput.addEventListener('input', function () { store.set('nombre', nameInput.value); });
+  nameInput.addEventListener('input', function () { store.set('nombre', nameInput.value); syncPrintHeader(); });
 
   const originalTitle = document.title;
-  document.getElementById('pdfBtn').addEventListener('click', function () { window.print(); });
-  window.addEventListener('beforeprint', function () {
+  function prepararImpresion() {
+    syncPrint();
     const name = nameInput.value.trim();
-    document.getElementById('printNameValue').textContent = name;
-    const hoy = new Date();
-    document.getElementById('printDateValue').textContent =
-      ('0' + hoy.getDate()).slice(-2) + '/' + ('0' + (hoy.getMonth() + 1)).slice(-2) + '/' + hoy.getFullYear();
     if (name) document.title = 'Programa_con_operadores_' + name.replace(/[\\/:*?"<>|]/g, ' ').replace(/\s+/g, '_');
-    document.getElementById('printSummary').textContent =
-      'Resueltos: ' + solvedCount() + '/' + TOTAL + ' (' + Math.round(solvedCount() / TOTAL * 100) + '%) — Nota: ' + nota() + ' / 10';
-    ALL.forEach(function (ex) {
-      const s = state[ex.id], u = ui[ex.id];
-      const code = u.ta.value.trim();
-      u.printCode.textContent = code && code !== 'print()' ? u.ta.value.replace(/\s+$/, '') : '(sin responder)';
-      u.printState.textContent = (s.solved ? '✓ Resuelto' : '✗ Sin resolver') +
-        (s.attempts ? ' · ' + s.attempts + (s.attempts === 1 ? ' intento' : ' intentos') : '') +
-        (s.pista ? ' · usó la pista' : '');
-    });
+  }
+  document.getElementById('pdfBtn').addEventListener('click', function () {
+    if (!nameInput.value.trim()) {
+      nameInput.focus();
+      nameInput.placeholder = 'Escribí tu nombre antes de descargar';
+      return;
+    }
+    prepararImpresion();
+    window.print();
   });
+  window.addEventListener('beforeprint', prepararImpresion);
   window.addEventListener('afterprint', function () { document.title = originalTitle; });
+  if (window.matchMedia) {
+    const mq = window.matchMedia('print');
+    const onChange = function (e) { if (e.matches) prepararImpresion(); };
+    if (mq.addEventListener) mq.addEventListener('change', onChange); else if (mq.addListener) mq.addListener(onChange);
+  }
+  syncPrint();
 
   /* ---------------- Inicio ---------------- */
   if (ready) { try { new Function('return 1')(); } catch (e) { ready = false; } }

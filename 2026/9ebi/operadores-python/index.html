@@ -433,7 +433,23 @@ function onChoiceClick(e) {
   updateStatus();
 }
 
+// El resumen para el PDF se mantiene al día, sin depender del evento beforeprint
+// (Safari, iPad y algunos celulares no lo disparan o lo hacen tarde).
+function syncPrintSummary() {
+  const summaryEl = document.getElementById('printScoreSummary');
+  if (!summaryEl) return;
+  if (answeredCount > 0) {
+    const pct = totalExercises ? Math.round((correctCount / totalExercises) * 100) : 0;
+    let text = `Resultado: ${correctCount}/${totalExercises} correctas (${pct}%) — Nota: ${computeNota()} / 10`;
+    if (answeredCount < totalExercises) text += ` · Actividad incompleta (${answeredCount}/${totalExercises} respondidas)`;
+    summaryEl.textContent = text;
+  } else {
+    summaryEl.textContent = '';
+  }
+}
+
 function updateStatus() {
+  syncPrintSummary();
   document.getElementById('scoreDisplay').textContent = `Aciertos: ${correctCount}/${answeredCount}`;
   document.getElementById('progressText').textContent = `${answeredCount}/${totalExercises}`;
   const pct = totalExercises ? (answeredCount / totalExercises) * 100 : 0;
@@ -479,11 +495,23 @@ document.addEventListener('DOMContentLoaded', () => {
   renderAll();
   const originalTitle = document.title;
 
-  const pdfBtn = document.getElementById('pdfBtn');
-  if (pdfBtn) pdfBtn.addEventListener('click', () => window.print());
-
   const nameInput = document.getElementById('studentName');
   const printNameValue = document.getElementById('printNameValue');
+  function syncPrintName() {
+    const name = nameInput ? nameInput.value.trim() : '';
+    if (printNameValue) printNameValue.textContent = name;
+    return name;
+  }
+  if (nameInput) nameInput.addEventListener('input', syncPrintName);
+  syncPrintName();
+
+  const pdfBtn = document.getElementById('pdfBtn');
+  if (pdfBtn) pdfBtn.addEventListener('click', () => {
+    const name = syncPrintName();
+    syncPrintSummary();
+    if (name) document.title = 'Operadores_Python_' + name.replace(/[\\/:*?"<>|]/g, ' ').replace(/\s+/g, '_').replace(/^_+|_+$/g, '');
+    window.print();
+  });
   window.addEventListener('beforeprint', () => {
     const name = nameInput ? nameInput.value.trim() : '';
     if (printNameValue) printNameValue.textContent = name;
