@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Armá el cronograma · Diagrama de Gantt · Módulo Administrativo/a</title>
+<style>
+  :root{
+    --dark:#21295C; --prim:#065A82; --teal:#1C7293; --light:#EEF4F8;
+    --acc:#F4A259; --accd:#B06A16; --grey:#5A6B78; --line:#B9CBD8;
+    --ok:#1E7A46; --bad:#B3261E;
+    --lab:300px; --cw:30px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Calibri,Segoe UI,system-ui,sans-serif;color:#1a2430;background:#F6F9FB;font-size:15px}
+  header{background:var(--dark);color:#fff;padding:14px 22px}
+  header h1{margin:0;font-size:21px;font-family:Cambria,Georgia,serif}
+  header p{margin:4px 0 0;font-size:13px;color:#CADCFC}
+  .wrap{display:flex;gap:16px;padding:16px 22px 28px;align-items:flex-start}
+  .side{width:310px;flex:0 0 310px}
+  .main{flex:1;min-width:0}
+  .card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:14px;margin-bottom:14px}
+  .card h2{margin:0 0 8px;font-size:15px;color:var(--prim);font-family:Cambria,Georgia,serif}
+  label{display:block;font-size:12px;color:var(--grey);margin:8px 0 3px}
+  input[type=text],input[type=number],select{width:100%;padding:7px 9px;border:1px solid var(--line);
+    border-radius:6px;font-family:inherit;font-size:14px;background:#fff}
+  .dos{display:flex;gap:8px}
+  .dos > div{flex:1;min-width:0}
+  .mision{background:var(--light);border-left:4px solid var(--prim);border-radius:6px;padding:10px 12px;margin-top:10px;font-size:13.5px}
+  .mision b{color:var(--dark)}
+  .mision .pant{display:block;margin-top:5px;color:var(--grey);font-size:12.5px}
+  ol.pasos{margin:6px 0 0;padding-left:20px;font-size:13.5px;line-height:1.5}
+  ol.pasos li{margin-bottom:5px}
+  .banco{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+  .chip{display:flex;align-items:center;gap:9px;width:100%;border:1px solid var(--line);background:var(--bg,#fff);
+    border-radius:10px;padding:6px 8px;cursor:pointer;user-select:none;transition:.12s;font-family:inherit;
+    color:#1F2A4D;text-align:left}
+  .chip:not(:disabled):hover{border-color:var(--prim);filter:brightness(.97)}
+  .chip.siguiente{border:2px solid var(--prim);padding:5px 7px;box-shadow:0 0 0 3px rgba(6,90,130,.15);
+    animation:llamar 1.6s ease-in-out infinite}
+  @keyframes llamar{50%{box-shadow:0 0 0 6px rgba(6,90,130,.08)}}
+  @media (prefers-reduced-motion:reduce){.chip.siguiente{animation:none}}
+  .chip.bloqueada{opacity:.45;filter:grayscale(1);cursor:not-allowed}
+  .banco-nota{font-size:12.5px;color:var(--grey);margin:0}
+  .banco-nota b{color:var(--prim)}
+  .chip .letra{flex:0 0 32px;height:32px;border-radius:50%;background:var(--c,var(--prim));color:#1F2A4D;
+    font-weight:bold;font-size:15px;display:flex;align-items:center;justify-content:center}
+  .chip .txt{flex:1;min-width:0;font-weight:bold;font-size:14.5px;line-height:1.2}
+  .chip .dur{flex:0 0 auto;padding:1px 7px;border-radius:10px;background:#fff;border:1px solid rgba(31,42,77,.18);
+    color:#1F2A4D;font-weight:bold;font-size:11.5px}
+  .chip .ico{flex:0 0 36px;width:36px;height:36px}
+  .chip.usada{opacity:.35;cursor:default}
+  .chip.usada .txt{text-decoration:line-through}
+  .toolbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px}
+  .hint{font-size:13px;color:var(--grey)}
+  .estado{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+  .estado span{background:#fff;border:1px solid var(--line);border-radius:6px;padding:5px 10px;font-size:13px;color:var(--grey)}
+  .estado b{color:var(--dark)}
+
+  /* ---------- Gantt ---------- */
+  #gantt{background:#fff;border:2px solid var(--prim);border-radius:8px;overflow-x:auto;min-height:220px}
+  .g-row{display:flex;border-bottom:1px solid #E3EBF1;min-width:calc(var(--lab) + var(--cw) * 20)}
+  .g-row:last-child{border-bottom:0}
+  .g-lab{flex:0 0 var(--lab);width:var(--lab);padding:8px 10px;border-right:1px solid var(--line);background:#fff;
+    position:sticky;left:0;z-index:2}
+  .g-time{position:relative;flex:0 0 calc(var(--cw) * 20);
+    background-image:linear-gradient(to right,#E3EBF1 1px,transparent 1px);background-size:var(--cw) 100%;cursor:pointer}
+  .g-time .sem{position:absolute;top:0;bottom:0;width:0;border-left:1px solid var(--line)}
+  .g-head .g-lab{font-weight:bold;color:var(--grey);font-size:12.5px;display:flex;align-items:flex-end}
+  .g-head .g-time{cursor:default;background-image:none;height:44px}
+  .g-head .semlab{position:absolute;top:4px;font-size:11px;color:var(--teal);font-weight:bold;text-align:center}
+  .g-head .dia{position:absolute;bottom:4px;width:var(--cw);text-align:center;font-size:11.5px;color:var(--grey);font-weight:bold}
+  .t-nom{font-weight:bold;color:var(--dark);font-size:13.5px;line-height:1.25}
+  .t-pista{font-size:12px;color:var(--grey);margin-top:2px;line-height:1.3}
+  .t-ctrl{display:flex;gap:6px;align-items:center;margin-top:6px}
+  .t-ctrl select{padding:4px 6px;font-size:12.5px;flex:1}
+  .t-ctrl button{border:1px solid var(--line);background:#fff;border-radius:5px;width:28px;height:28px;cursor:pointer;
+    color:var(--bad);font-size:14px;flex:0 0 28px}
+  .t-ctrl button:hover{border-color:var(--bad)}
+  .bar{position:absolute;top:50%;height:26px;margin-top:-13px;background:var(--teal);border-radius:6px;color:#fff;
+    font-size:12px;font-weight:bold;display:flex;align-items:center;justify-content:center;cursor:grab;user-select:none;
+    box-shadow:0 2px 4px rgba(0,0,0,.18);touch-action:none;white-space:nowrap;overflow:hidden}
+  .bar:active{cursor:grabbing}
+  .bar.ajena{background:#8B96C4}
+  .g-row.conflicto .bar{background:var(--bad)}
+  .g-row.conflicto .g-lab{box-shadow:inset 4px 0 0 var(--bad)}
+  .diam{position:absolute;top:50%;width:22px;height:22px;margin-top:-11px;margin-left:-11px;background:var(--acc);
+    border:2px solid var(--accd);transform:rotate(45deg);cursor:grab;touch-action:none}
+  .g-row.conflicto .diam{background:var(--bad);border-color:#7d1a14}
+  .bar:focus-visible,.diam:focus-visible,.chip:focus-visible,.btn:focus-visible{
+    outline:3px solid var(--acc);outline-offset:2px}
+  .vacio{padding:34px 20px;text-align:center;color:var(--grey);font-size:14px}
+
+  .acciones{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .btn{border:0;border-radius:6px;padding:10px 16px;font-size:14px;font-family:inherit;cursor:pointer;font-weight:bold}
+  .btn.p{background:var(--prim);color:#fff}
+  .btn.s{background:#fff;color:var(--prim);border:1px solid var(--prim)}
+  .btn:hover{filter:brightness(1.08)}
+  #resultado{margin-top:12px}
+  .chk{display:flex;gap:9px;align-items:flex-start;padding:7px 10px;border-radius:6px;margin-bottom:5px;font-size:13.5px}
+  .chk.ok{background:#E8F5EE;color:#12522f}
+  .chk.no{background:#FBEAE8;color:#7d1a14}
+  .chk.info{background:var(--light);color:var(--dark)}
+  .chk .ic{font-weight:bold;flex:0 0 16px}
+  .puntaje{font-size:14px;font-weight:bold;margin:10px 0 6px;color:var(--dark)}
+  .leyenda{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--grey);margin-top:8px}
+  .leyenda span{display:flex;align-items:center;gap:6px}
+  .lb{display:inline-block;width:26px;height:10px;border-radius:3px;background:var(--teal)}
+  .ld{display:inline-block;width:10px;height:10px;background:var(--acc);border:1.5px solid var(--accd);transform:rotate(45deg)}
+  .solo-impresion{display:none}
+  @media print{
+    .solo-impresion{display:block;border:1px solid var(--line);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:13px}
+    .solo-impresion b{color:var(--dark)}
+    .side,.toolbar,.acciones,header p,.t-ctrl button{display:none}
+    .wrap{display:block;padding:0}
+    #gantt{overflow:visible}
+    .g-lab{position:static}
+    body{font-size:12px}
+  }
+  @media (max-width:900px){.wrap{flex-direction:column;align-items:stretch;padding:12px}.side{width:100%;flex:auto}.main{width:100%}:root{--lab:220px}}
+
+  .tabla-card{padding:12px 14px}
+  .tabla-wrap{overflow-x:auto}
+  .tabla{width:100%;border-collapse:collapse;font-size:13.5px}
+  .tabla th{background:var(--prim);color:#fff;text-align:left;padding:7px 10px;font-weight:bold}
+  .tabla td{padding:6px 10px;border-bottom:1px solid #E3EBF1;color:#1a2430}
+  .tabla tbody tr:nth-child(even) td{background:#F6F9FB}
+  .tabla .c{text-align:center;white-space:nowrap}
+  .tabla .cod-t{font-weight:bold;color:var(--prim);width:52px}
+  .tabla tr.hito .cod-t{color:var(--accd)}
+  .cod{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;
+    background:var(--prim);color:#fff;font-size:12px;margin-right:7px;vertical-align:1px}
+  .cod.h{background:var(--acc);color:#3A2E13}
+</style>
+</head>
+<body>
+<header>
+  <h1>Armá el cronograma</h1>
+  <p>Ingeniería del Software · 3.er año TI · Diagrama de Gantt · Proyecto “Gestión de Horarios” · Módulo Administrativo/a · En duplas</p>
+</header>
+
+<div class="wrap">
+  <div class="side">
+    <div class="card">
+      <h2>1. Su dupla</h2>
+      <div class="dos">
+        <div><label for="n1">Integrante 1</label><input type="text" id="n1" placeholder="Nombre"></div>
+        <div><label for="n2">Integrante 2</label><input type="text" id="n2" placeholder="Nombre"></div>
+      </div>
+      <div class="mision">
+        <b>Módulo Administrativo/a.</b> Objetivo del rol: registrar un docente nuevo y asignarle horas en un grupo de la escuela.
+        <span class="pant">Pantallas: Panel de gestión → Alta de docente → Asignar horas al grupo</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>2. Qué hacer</h2>
+      <ol class="pasos">
+        <li>Agreguen las tareas del banco en orden, de la A a la G, y al final el hito H. El banco habilita una tarea por vez. Son las tareas de la tabla del módulo.</li>
+        <li>Ubiquen cada barra en la línea de tiempo: arrástrenla o hagan clic en el día en que empieza. Miren <b>Necesita antes</b>: una tarea empieza recién cuando termina la que necesita.</li>
+        <li>Elijan un <b>responsable</b> para cada tarea. Una persona no puede hacer dos tareas a la vez.</li>
+        <li>Ubiquen el <b>hito ◆ H</b> en el día de la entrega a la Dirección.</li>
+        <li>Toquen <b>Verificar</b> y corrijan lo que falte.</li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <h2>3. Banco de tareas</h2>
+      <p class="banco-nota" id="banco-nota" aria-live="polite"></p>
+      <div class="banco" id="banco"></div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="solo-impresion" id="impresion"></div>
+
+    <div class="card tabla-card">
+      <h2>Tabla de tareas del módulo</h2>
+      <div class="tabla-wrap">
+        <table class="tabla">
+          <thead><tr><th class="c">Cód.</th><th>Tarea</th><th class="c">Necesita antes</th></tr></thead>
+          <tbody id="tabla"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <span class="hint" id="pista">Arrastren las barras o hagan clic en el día donde empieza cada tarea.</span>
+    </div>
+
+    <div class="estado" id="estado"></div>
+
+    <div id="gantt" aria-label="Diagrama de Gantt del Módulo Administrativo/a"></div>
+
+    <div class="leyenda">
+      <span><i class="lb"></i> tarea (el largo de la barra es su duración)</span>
+      <span><i class="ld"></i> hito de entrega</span>
+      <span>cada columna es un día hábil · 5 días = 1 semana</span>
+    </div>
+
+    <div class="acciones">
+      <button class="btn p" id="verificar">Verificar mi cronograma</button>
+      <button class="btn s" id="limpiar">Vaciar cronograma</button>
+      <button class="btn s" id="descargar">Descargar resumen</button>
+      <button class="btn s" id="imprimir">Imprimir / Guardar PDF</button>
+    </div>
+
+    <div id="resultado" aria-live="polite"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var DIAS = 20;
+
+  // ---------- datos: tabla de tareas del Módulo Administrativo/a (diapositiva 9) ----------
+  // d = duración en días hábiles; nec = tareas que tienen que estar terminadas antes
+  var TAREAS = {
+    A:{n:'Relevar requerimientos con Administración', c:'Relevar requerimientos', d:2, nec:[]},
+    B:{n:'Diseñar la base de datos (docentes, materias, grupos, salones)', c:'Diseñar base de datos', d:3, nec:['A']},
+    C:{n:'Diseñar las pantallas del módulo', c:'Diseñar pantallas', d:2, nec:['A']},
+    D:{n:'Programar alta de docente y asignación de horas (con validación de superposición)', c:'Programar backend', d:5, nec:['B']},
+    E:{n:'Programar las pantallas: Panel de gestión, Alta de docente, Asignar horas', c:'Programar frontend', d:4, nec:['C']},
+    F:{n:'Integrar frontend y backend', c:'Integrar', d:2, nec:['D','E']},
+    G:{n:'Probar con el personal administrativo', c:'Probar con usuarios', d:2, nec:['F']}
+  };
+  var CODIGOS = ['A','B','C','D','E','F','G'];
+  var HITO = {id:'H', n:'Hito: presentación del módulo a la Dirección', nec:['G']};
+
+  // ---------- estado ----------
+  var filas = [];      // tareas: {id, inicio (0-based), resp}  ·  hito: {id:'H', dia (1-based)}
+  var marcas = {};     // filas señaladas por la última verificación
+  var cw = 30;
+
+  var gantt = document.getElementById('gantt');
+  var banco = document.getElementById('banco');
+  var estado = document.getElementById('estado');
+  var resultado = document.getElementById('resultado');
+  var n1 = document.getElementById('n1'), n2 = document.getElementById('n2');
+
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function nombre1(){ return n1.value.trim() || 'Integrante 1'; }
+  function nombre2(){ return n2.value.trim() || 'Integrante 2'; }
+  function etiquetaResp(r){ return r === 'i1' ? nombre1() : r === 'i2' ? nombre2() : r === 'ambos' ? 'Ambos' : '(sin responsable)'; }
+  function fila(id){ for (var i = 0; i < filas.length; i++) if (filas[i].id === id) return filas[i]; return null; }
+  function fin(f){ return f.inicio + TAREAS[f.id].d; }   // último día ocupado (1-based)
+  function corto(id){ return id + ' (' + TAREAS[id].c + ')'; }
+
+  // ---------- banco: texto, colores e ícono de cada tarjeta (como la lámina del Gantt) ----------
+  var N = '#1F2A4D';
+  var BANCO = {
+    A:{t:'Relevar requerimientos', bg:'#FCE6EE', c:'#F07898', ico:
+      '<rect x="8" y="6" width="24" height="31" rx="3" fill="#fff" stroke="'+N+'" stroke-width="2"/>' +
+      '<rect x="14" y="3" width="12" height="6" rx="2" fill="#F6C46A" stroke="'+N+'" stroke-width="2"/>' +
+      '<g fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' +
+      '<path d="M12 16l2 2 3.5-4" stroke="#E25563"/><path d="M12 23l2 2 3.5-4" stroke="#3FAF6B"/>' +
+      '<path d="M12 30l2 2 3.5-4" stroke="#3FAF6B"/><path d="M21 16h7M21 23h7M21 30h7" stroke="'+N+'" stroke-width="2"/></g>'},
+    B:{t:'Diseñar base de datos', bg:'#E3F4E8', c:'#5CC98A', ico:
+      '<path d="M8 9v22a12 4 0 0 0 24 0V9" fill="#5DA9E9" stroke="'+N+'" stroke-width="2"/>' +
+      '<ellipse cx="20" cy="9" rx="12" ry="4" fill="#A9D4F7" stroke="'+N+'" stroke-width="2"/>' +
+      '<path d="M8 16.5a12 4 0 0 0 24 0M8 24a12 4 0 0 0 24 0" fill="none" stroke="'+N+'" stroke-width="2"/>' +
+      '<circle cx="28" cy="15.5" r="1.2" fill="'+N+'"/><circle cx="28" cy="23" r="1.2" fill="'+N+'"/><circle cx="28" cy="30.5" r="1.2" fill="'+N+'"/>'},
+    C:{t:'Diseñar pantallas', bg:'#FFF4D4', c:'#F8C944', ico:
+      '<rect x="4" y="6" width="32" height="22" rx="2.5" fill="#fff" stroke="'+N+'" stroke-width="2"/>' +
+      '<path d="M5 9a2 2 0 0 1 2-2h26a2 2 0 0 1 2 2v2H5z" fill="#3A9BE8"/>' +
+      '<rect x="8" y="14" width="7" height="5" fill="#F2784B"/><rect x="17" y="14" width="7" height="5" fill="#3A9BE8"/>' +
+      '<path d="M27 15h5M27 18.5h5M8 23h16" stroke="#9AA9BB" stroke-width="2" stroke-linecap="round"/>' +
+      '<path d="M17 28l-1 5h8l-1-5" fill="#9AA9BB" stroke="'+N+'" stroke-width="2" stroke-linejoin="round"/>' +
+      '<path d="M12 34h16" stroke="'+N+'" stroke-width="2.6" stroke-linecap="round"/>'},
+    D:{t:'Programar backend', bg:'#ECE7FA', c:'#A47FE6', ico:
+      '<rect x="3" y="7" width="34" height="26" rx="3" fill="#24345F" stroke="'+N+'" stroke-width="2"/>' +
+      '<path d="M4 13h32" stroke="#5A6E9A" stroke-width="1.5"/>' +
+      '<circle cx="7.5" cy="10" r="1.2" fill="#F2784B"/><circle cx="11" cy="10" r="1.2" fill="#F6C343"/><circle cx="14.5" cy="10" r="1.2" fill="#4CC27A"/>' +
+      '<path d="M14 18.5l-4.5 4.5 4.5 4.5M26 18.5l4.5 4.5-4.5 4.5M22.5 17l-5 12" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>'},
+    E:{t:'Programar frontend', bg:'#E1F0FC', c:'#4DA6EC', ico:
+      '<rect x="3" y="7" width="34" height="26" rx="3" fill="#fff" stroke="'+N+'" stroke-width="2"/>' +
+      '<path d="M4 10a2 2 0 0 1 2-2h28a2 2 0 0 1 2 2v3H4z" fill="#BFE0F8"/><path d="M4 13h32" stroke="'+N+'" stroke-width="1.5"/>' +
+      '<circle cx="7.5" cy="10.5" r="1.2" fill="#F2784B"/><circle cx="11" cy="10.5" r="1.2" fill="#F6C343"/><circle cx="14.5" cy="10.5" r="1.2" fill="#4CC27A"/>' +
+      '<rect x="7" y="16.5" width="12" height="7" rx="1" fill="#8AA4BF"/><rect x="21.5" y="16.5" width="11.5" height="7" rx="1" fill="#F2784B"/>' +
+      '<rect x="7" y="26" width="12" height="3.5" rx="1" fill="#8AA4BF"/><rect x="21.5" y="26" width="11.5" height="3.5" rx="1" fill="#8AA4BF"/>'},
+    F:{t:'Integrar', bg:'#FDEADB', c:'#F69A4C', ico:
+      '<g stroke="'+N+'" stroke-width="1.5" stroke-linejoin="round">' +
+      '<path fill="#8D9BB0" d="M19.0 23.5 L21.4 23.7 L21.4 26.3 L19.0 26.5 L18.1 28.9 L19.6 30.7 L17.7 32.6 L15.9 31.1 L13.5 32.0 L13.3 34.4 L10.7 34.4 L10.5 32.0 L8.1 31.1 L6.3 32.6 L4.4 30.7 L5.9 28.9 L5.0 26.5 L2.6 26.3 L2.6 23.7 L5.0 23.5 L5.9 21.1 L4.4 19.3 L6.3 17.4 L8.1 18.9 L10.5 18.0 L10.7 15.6 L13.3 15.6 L13.5 18.0 L15.9 18.9 L17.7 17.4 L19.6 19.3 L18.1 21.1Z"/>' +
+      '<path fill="#F6C343" d="M33.0 10.5 L35.4 10.7 L35.4 13.3 L33.0 13.5 L32.1 15.9 L33.6 17.7 L31.7 19.6 L29.9 18.1 L27.5 19.0 L27.3 21.4 L24.7 21.4 L24.5 19.0 L22.1 18.1 L20.3 19.6 L18.4 17.7 L19.9 15.9 L19.0 13.5 L16.6 13.3 L16.6 10.7 L19.0 10.5 L19.9 8.1 L18.4 6.3 L20.3 4.4 L22.1 5.9 L24.5 5.0 L24.7 2.6 L27.3 2.6 L27.5 5.0 L29.9 5.9 L31.7 4.4 L33.6 6.3 L32.1 8.1Z"/>' +
+      '<path fill="#F6C343" d="M34.3 28.0 L36.4 28.2 L36.4 30.8 L34.3 31.0 L33.3 33.1 L34.4 34.9 L32.4 36.5 L31.0 35.0 L28.6 35.5 L28.0 37.5 L25.5 36.9 L25.8 34.8 L23.9 33.3 L21.9 34.1 L20.8 31.8 L22.6 30.7 L22.6 28.3 L20.8 27.2 L21.9 24.9 L23.9 25.7 L25.8 24.2 L25.5 22.1 L28.0 21.5 L28.6 23.5 L31.0 24.0 L32.4 22.5 L34.4 24.1 L33.3 25.9Z"/>' +
+      '<circle cx="12" cy="25" r="3.2" fill="#fff"/><circle cx="26" cy="12" r="3.2" fill="#fff"/><circle cx="28.5" cy="29.5" r="2.8" fill="#fff"/></g>'},
+    G:{t:'Probar con usuarios', bg:'#E1F4E9', c:'#54C68A', ico:
+      '<g stroke="'+N+'" stroke-width="1.8" stroke-linejoin="round">' +
+      '<circle cx="10.5" cy="15" r="4.5" fill="#3A9BE8"/><path d="M3 34v-4a7.5 7.5 0 0 1 15 0v4z" fill="#3A9BE8"/>' +
+      '<circle cx="29.5" cy="15" r="4.5" fill="#4CC27A"/><path d="M22 34v-4a7.5 7.5 0 0 1 15 0v4z" fill="#4CC27A"/>' +
+      '<circle cx="20" cy="13" r="5" fill="#F2846B"/><path d="M11 36v-5a9 9 0 0 1 18 0v5z" fill="#F2846B"/></g>'},
+    H:{t:'Presentación (hito)', bg:'#FCE6EE', c:'#F07898', ico:
+      '<path d="M10 5v31" stroke="'+N+'" stroke-width="2.6" stroke-linecap="round"/>' +
+      '<path d="M11 7C15 4.5 19 9.5 23 7S29 5.5 31 6.5L27.5 13 31 19.5C29 18.5 27 18 23 19.5S15 17 11 19Z" fill="#EC5A7E" stroke="'+N+'" stroke-width="1.8" stroke-linejoin="round"/>'}
+  };
+
+  function armarBanco(){
+    banco.innerHTML = '';
+    CODIGOS.concat(['H']).forEach(function(id){
+      var k = BANCO[id];
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'chip' + (id === 'H' ? ' hito' : ''); b.dataset.id = id;
+      b.style.setProperty('--bg', k.bg); b.style.setProperty('--c', k.c);
+      b.innerHTML = '<span class="letra">' + id + '.</span>' +
+        '<span class="txt">' + k.t + '</span>' +
+        '<span class="dur">' + (id === 'H' ? 0 : TAREAS[id].d) + ' d</span>' +
+        '<svg class="ico" viewBox="0 0 40 40" aria-hidden="true">' + k.ico + '</svg>';
+      b.addEventListener('click', function(){ agregar(id); });
+      banco.appendChild(b);
+    });
+    marcarBanco();
+  }
+  // se habilita una sola tarea por vez: la primera (de la A a la H) que todavía no está en el cronograma
+  var ORDEN = CODIGOS.concat(['H']);
+  function siguiente(){
+    for (var i = 0; i < ORDEN.length; i++) if (!fila(ORDEN[i])) return ORDEN[i];
+    return null;
+  }
+  function marcarBanco(){
+    var sig = siguiente();
+    Array.prototype.forEach.call(banco.children, function(ch){
+      var id = ch.dataset.id;
+      var usada = !!fila(id), esSig = id === sig, bloq = !usada && !esSig;
+      ch.classList.toggle('usada', usada);
+      ch.classList.toggle('siguiente', esSig);
+      ch.classList.toggle('bloqueada', bloq);
+      ch.disabled = !esSig;
+      ch.title = usada ? 'Ya está en el cronograma'
+               : bloq ? 'Primero agreguen la tarea ' + sig
+               : 'Agregar al cronograma';
+    });
+    var nota = document.getElementById('banco-nota');
+    nota.innerHTML = sig ? 'Ahora pueden agregar la tarea <b>' + sig + '</b>.' : 'Ya agregaron todas las tareas.';
+  }
+
+  function agregar(id){
+    if (fila(id) || id !== siguiente()) return;
+    var nueva = id === 'H' ? {id:'H', dia:1} : {id:id, inicio:0, resp:''};
+    var i = 0;
+    while (i < filas.length && filas[i].id < id) i++;   // la fila queda en su lugar (A a H)
+    filas.splice(i, 0, nueva);
+    cambio();
+    var prox = banco.querySelector('.chip.siguiente');
+    if (prox) prox.focus();
+  }
+  function quitar(id){
+    filas = filas.filter(function(f){ return f.id !== id; });
+    cambio();
+  }
+  function cambio(){ marcas = {}; marcarBanco(); render(); }
+
+  // ---------- dibujo ----------
+  var imprimiendo = false;
+  function medir(){
+    var raiz = document.documentElement.style;
+    if (imprimiendo){            // en papel A4 el diagrama entra completo
+      cw = 24; raiz.setProperty('--cw', '24px'); raiz.setProperty('--lab', '190px');
+      return;
+    }
+    raiz.removeProperty('--lab');
+    var lab = window.innerWidth <= 900 ? 220 : 300;
+    var disponible = gantt.clientWidth - lab - 4;
+    cw = Math.max(26, Math.min(44, Math.floor(disponible / DIAS)));
+    document.documentElement.style.setProperty('--cw', cw + 'px');
+  }
+
+  function pista(id){
+    var nec = id === 'H' ? HITO.nec : TAREAS[id].nec;
+    if (!nec.length) return 'Necesita antes: — (puede empezar el día 1)';
+    return 'Necesita antes: ' + nec.map(corto).join(' y ');
+  }
+
+  function cabecera(){
+    var row = document.createElement('div'); row.className = 'g-row g-head';
+    var lab = document.createElement('div'); lab.className = 'g-lab'; lab.textContent = 'Tarea';
+    var time = document.createElement('div'); time.className = 'g-time';
+    for (var s = 0; s < DIAS / 5; s++){
+      var sl = document.createElement('div'); sl.className = 'semlab';
+      sl.style.left = (s * 5 * cw) + 'px'; sl.style.width = (5 * cw) + 'px';
+      sl.textContent = 'Semana ' + (s + 1);
+      time.appendChild(sl);
+    }
+    for (var d = 0; d < DIAS; d++){
+      var dl = document.createElement('div'); dl.className = 'dia';
+      dl.style.left = (d * cw) + 'px'; dl.textContent = d + 1;
+      time.appendChild(dl);
+    }
+    row.appendChild(lab); row.appendChild(time);
+    return row;
+  }
+
+  function separadores(time){
+    for (var s = 1; s < DIAS / 5; s++){
+      var l = document.createElement('div'); l.className = 'sem';
+      l.style.left = (s * 5 * cw) + 'px';
+      time.appendChild(l);
+    }
+  }
+
+  function render(){
+    medir();
+    gantt.innerHTML = '';
+    gantt.appendChild(cabecera());
+    if (!filas.length){
+      var v = document.createElement('div'); v.className = 'vacio';
+      v.textContent = 'Toquen las tareas del banco, de la A a la H: cada una aparece acá como una fila con su barra.';
+      gantt.appendChild(v);
+    }
+    filas.forEach(function(f){
+      var row = document.createElement('div');
+      row.className = 'g-row' + (marcas[f.id] ? ' conflicto' : '');
+      var lab = document.createElement('div'); lab.className = 'g-lab';
+      var time = document.createElement('div'); time.className = 'g-time';
+      separadores(time);
+
+      if (f.id === 'H'){
+        lab.innerHTML = '<div class="t-nom"><span class="cod h">H</span>◆ ' + HITO.n + '</div>' +
+                        '<div class="t-pista">' + pista('H') + ' · Ubicado en el día ' + f.dia + '.</div>';
+        var ctrl = document.createElement('div'); ctrl.className = 't-ctrl';
+        ctrl.appendChild(botonQuitar(f.id));
+        lab.appendChild(ctrl);
+        var dm = document.createElement('div'); dm.className = 'diam'; dm.tabIndex = 0;
+        dm.setAttribute('role', 'slider'); dm.setAttribute('aria-label', 'H. ' + HITO.n + ', día ' + f.dia);
+        dm.style.left = (f.dia * cw) + 'px';
+        time.appendChild(dm);
+        arrastrable(dm, f, time, true);
+      } else {
+        var t = TAREAS[f.id];
+        lab.innerHTML = '<div class="t-nom"><span class="cod">' + f.id + '</span>' + t.n + '</div>' +
+                        '<div class="t-pista">' + pista(f.id) + '</div>';
+        var ctrl2 = document.createElement('div'); ctrl2.className = 't-ctrl';
+        var sel = document.createElement('select');
+        sel.setAttribute('aria-label', 'Responsable de la tarea ' + f.id);
+        [['', 'Responsable…'], ['i1', nombre1()], ['i2', nombre2()], ['ambos', 'Ambos']].forEach(function(o){
+          var op = document.createElement('option'); op.value = o[0]; op.textContent = o[1];
+          if (f.resp === o[0]) op.selected = true;
+          sel.appendChild(op);
+        });
+        sel.addEventListener('change', function(){ f.resp = sel.value; marcas = {}; render(); });
+        ctrl2.appendChild(sel);
+        ctrl2.appendChild(botonQuitar(f.id));
+        lab.appendChild(ctrl2);
+        var bar = document.createElement('div'); bar.className = 'bar'; bar.tabIndex = 0;
+        bar.setAttribute('role', 'slider');
+        bar.setAttribute('aria-label', 'Tarea ' + f.id + ': días ' + (f.inicio + 1) + ' a ' + fin(f));
+        bar.style.left = (f.inicio * cw + 2) + 'px';
+        bar.style.width = (t.d * cw - 4) + 'px';
+        bar.textContent = f.id + ' · ' + t.d + ' d';
+        bar.title = 'Días ' + (f.inicio + 1) + ' a ' + fin(f) + ' · ' + etiquetaResp(f.resp);
+        time.appendChild(bar);
+        arrastrable(bar, f, time, false);
+      }
+
+      // clic en un día de la fila: la tarea empieza ese día (o el hito queda en ese día)
+      time.addEventListener('click', function(ev){
+        if (ev.target.classList.contains('bar') || ev.target.classList.contains('diam')) return;
+        var r = time.getBoundingClientRect();
+        var dia = Math.floor((ev.clientX - r.left) / cw);
+        if (f.id === 'H') f.dia = Math.max(1, Math.min(DIAS, dia + 1));
+        else f.inicio = Math.max(0, Math.min(DIAS - TAREAS[f.id].d, dia));
+        marcas = {}; render();
+      });
+
+      row.appendChild(lab); row.appendChild(time);
+      gantt.appendChild(row);
+    });
+    pintarEstado();
+  }
+
+  function botonQuitar(id){
+    var b = document.createElement('button');
+    b.type = 'button'; b.textContent = '✕';
+    b.title = 'Quitar del cronograma'; b.setAttribute('aria-label', 'Quitar la tarea ' + id + ' del cronograma');
+    b.addEventListener('click', function(){ quitar(id); });
+    return b;
+  }
+
+  // ---------- arrastre: puntero o flechas del teclado ----------
+  function arrastrable(el, f, time, esHito){
+    var moviendo = false, offset = 0;
+    el.addEventListener('pointerdown', function(ev){
+      moviendo = true;
+      el.setPointerCapture(ev.pointerId);
+      var r = time.getBoundingClientRect();
+      offset = esHito ? 0 : (ev.clientX - r.left) - f.inicio * cw;
+      ev.preventDefault();
+    });
+    el.addEventListener('pointermove', function(ev){
+      if (!moviendo) return;
+      var r = time.getBoundingClientRect();
+      var x = ev.clientX - r.left - offset;
+      if (esHito){
+        f.dia = Math.max(1, Math.min(DIAS, Math.round(x / cw)));
+        el.style.left = (f.dia * cw) + 'px';
+      } else {
+        f.inicio = Math.max(0, Math.min(DIAS - TAREAS[f.id].d, Math.round(x / cw)));
+        el.style.left = (f.inicio * cw + 2) + 'px';
+      }
+    });
+    function soltar(){ if (!moviendo) return; moviendo = false; marcas = {}; render(); }
+    el.addEventListener('pointerup', soltar);
+    el.addEventListener('pointercancel', soltar);
+    el.addEventListener('keydown', function(ev){
+      var paso = ev.key === 'ArrowRight' ? 1 : ev.key === 'ArrowLeft' ? -1 : 0;
+      if (!paso) return;
+      ev.preventDefault();
+      if (esHito) f.dia = Math.max(1, Math.min(DIAS, f.dia + paso));
+      else f.inicio = Math.max(0, Math.min(DIAS - TAREAS[f.id].d, f.inicio + paso));
+      marcas = {}; render();
+      var prefijo = esHito ? 'H.' : 'Tarea ' + f.id + ':';
+      Array.prototype.forEach.call(gantt.querySelectorAll('.bar,.diam'), function(x){
+        if (x.getAttribute('aria-label').indexOf(prefijo) === 0) x.focus();
+      });
+    });
+  }
+
+  // ---------- estado del cronograma ----------
+  function ultimoDia(){
+    var u = 0;
+    filas.forEach(function(f){ if (f.id !== 'H') u = Math.max(u, fin(f)); });
+    return u;
+  }
+  function pintarEstado(){
+    var tareas = filas.filter(function(f){ return f.id !== 'H'; }).length;
+    var h = fila('H');
+    var u = ultimoDia();
+    estado.innerHTML =
+      '<span>Tareas en el cronograma: <b>' + tareas + ' de 7</b></span>' +
+      '<span>Último día de trabajo: <b>' + (u ? 'día ' + u : '—') + '</b></span>' +
+      '<span>Entrega (hito H): <b>' + (h ? 'día ' + h.dia : 'sin ubicar') + '</b></span>';
+  }
+
+
+  // ---------- verificación ----------
+  function finMinimo(){
+    var memo = {};
+    function ef(id){
+      if (memo[id] !== undefined) return memo[id];
+      var es = 0;
+      TAREAS[id].nec.forEach(function(p){ es = Math.max(es, ef(p)); });
+      return (memo[id] = es + TAREAS[id].d);
+    }
+    var m = 0; CODIGOS.forEach(function(id){ m = Math.max(m, ef(id)); });
+    return m;
+  }
+  function solapan(a, b){ return a.inicio < fin(b) && b.inicio < fin(a); }
+  function lista(arr){ return arr.length > 1 ? arr.slice(0, -1).join(', ') + ' y ' + arr[arr.length - 1] : arr[0]; }
+
+  function verificar(){
+    var checks = [];
+    var nuevas = {};
+    var tareas = filas.filter(function(f){ return f.id !== 'H'; });
+    var ids = tareas.map(function(f){ return f.id; });
+    var h = fila('H');
+
+    var faltan = CODIGOS.filter(function(x){ return ids.indexOf(x) < 0; });
+    if (!h) faltan.push('H');
+    checks.push({ ok: !faltan.length,
+      t: !faltan.length ? 'Están las 7 tareas (A a G) y el hito H.'
+        : 'Faltan en el cronograma: ' + lista(faltan) + '. Agréguenlas desde el banco.' });
+
+    var choques = [];
+    tareas.forEach(function(f){
+      TAREAS[f.id].nec.forEach(function(p){
+        var fp = fila(p);
+        if (fp && f.inicio < fin(fp)){
+          choques.push(corto(f.id) + ' empieza el día ' + (f.inicio + 1) + ', pero necesita ' + p +
+            ', que termina el día ' + fin(fp) + '. Puede empezar desde el día ' + (fin(fp) + 1) + '.');
+          nuevas[f.id] = true;
+        }
+      });
+    });
+    checks.push({ ok: !choques.length,
+      t: !choques.length ? 'Cada tarea empieza después de que termina la que necesita.' : choques.join(' ') });
+
+    var sinResp = tareas.filter(function(f){ return !f.resp; });
+    checks.push({ ok: !sinResp.length,
+      t: !sinResp.length ? 'Todas las tareas tienen responsable.'
+        : 'Falta elegir responsable en: ' + lista(sinResp.map(function(f){ return f.id; })) + '.' });
+
+    var dobles = [];
+    for (var i = 0; i < tareas.length; i++){
+      for (var j = i + 1; j < tareas.length; j++){
+        var a = tareas[i], b = tareas[j];
+        if (!a.resp || !b.resp || !solapan(a, b)) continue;
+        if (a.resp === b.resp || a.resp === 'ambos' || b.resp === 'ambos'){
+          var quien = (a.resp === b.resp && a.resp !== 'ambos') ? esc(etiquetaResp(a.resp)) + ' tiene' : 'Alguien de la dupla tendría';
+          dobles.push(quien + ' las tareas ' + a.id + ' y ' + b.id + ' al mismo tiempo (días ' +
+            (Math.max(a.inicio, b.inicio) + 1) + ' a ' + Math.min(fin(a), fin(b)) + ').');
+          nuevas[a.id] = true; nuevas[b.id] = true;
+        }
+      }
+    }
+    checks.push({ ok: !dobles.length,
+      t: !dobles.length ? 'Nadie tiene dos tareas al mismo tiempo.' : dobles.join(' ') });
+
+    var u = ultimoDia();
+    var g = fila('G');
+    var hitoOk = !!h && u > 0 && h.dia >= u;
+    if (h && !hitoOk) nuevas.H = true;
+    checks.push({ ok: hitoOk,
+      t: !h ? 'Falta el hito H de entrega a la Dirección.'
+        : u === 0 ? 'Ubiquen primero las tareas y después el hito H.'
+        : hitoOk ? 'El hito H está el día ' + h.dia + ', después de la última tarea.'
+        : 'El hito H está el día ' + h.dia + ', pero ' + (g && fin(g) === u ? 'G termina' : 'todavía hay trabajo hasta') + ' el día ' + u + '. La entrega va al final.' });
+
+    marcas = nuevas;
+    render();
+
+    var buenos = checks.filter(function(c){ return c.ok; }).length;
+    var html = '<div class="puntaje">Verificación: ' + buenos + ' de ' + checks.length + ' criterios logrados</div>';
+    checks.forEach(function(c){
+      html += '<div class="chk ' + (c.ok ? 'ok' : 'no') + '"><span class="ic">' + (c.ok ? '✓' : '✕') +
+              '</span><span>' + c.t + '</span></div>';
+    });
+    if (buenos === checks.length){
+      var minimo = finMinimo();
+      html += '<div class="chk ok"><span class="ic">★</span><span>Cronograma completo: entregan el día ' + h.dia +
+              ' (' + semanas(h.dia) + ').</span></div>';
+      if (u > minimo){
+        html += '<div class="chk info"><span class="ic">★</span><span>Desafío: con estas dependencias, el trabajo podría terminar el día ' +
+                minimo + ' y ahora termina el día ' + u + '. ¿Qué tareas podrían hacerse al mismo tiempo, cada una con un responsable distinto?</span></div>';
+      }
+    }
+    resultado.innerHTML = html;
+    if (resultado.scrollIntoView) resultado.scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+  function semanas(d){
+    var s = Math.ceil(d / 5);
+    return 'unas ' + s + (s === 1 ? ' semana hábil' : ' semanas hábiles');
+  }
+
+  document.getElementById('verificar').addEventListener('click', verificar);
+
+  document.getElementById('limpiar').addEventListener('click', function(){
+    if (!filas.length) return;
+    if (!confirm('¿Vaciar el cronograma y empezar de nuevo?')) return;
+    filas = []; marcas = {}; resultado.innerHTML = '';
+    marcarBanco(); render();
+  });
+
+  function datosImpresion(){
+    var hoy = new Date();
+    var fecha = ('0' + hoy.getDate()).slice(-2) + '/' + ('0' + (hoy.getMonth() + 1)).slice(-2) + '/' + hoy.getFullYear();
+    document.getElementById('impresion').innerHTML =
+      '<div><b>Integrantes:</b> ' + esc(nombre1()) + ' y ' + esc(nombre2()) + '</div>' +
+      '<div><b>Módulo:</b> Administrativo/a · Proyecto “Gestión de Horarios”</div>' +
+      '<div><b>Fecha:</b> ' + fecha + '</div>';
+  }
+  window.addEventListener('beforeprint', function(){ imprimiendo = true; datosImpresion(); render(); });
+  window.addEventListener('afterprint', function(){ imprimiendo = false; render(); });
+  document.getElementById('imprimir').addEventListener('click', function(){
+    if (!n1.value.trim() || !n2.value.trim()){
+      if (!confirm('Falta completar el nombre de algún integrante. ¿Imprimir igual?')){ n1.value.trim() ? n2.focus() : n1.focus(); return; }
+    }
+    imprimiendo = true; datosImpresion(); render();
+    window.print();
+  });
+
+  [n1, n2].forEach(function(inp){ inp.addEventListener('change', render); });
+
+  document.getElementById('descargar').addEventListener('click', function(){
+    var L = [];
+    L.push('ARMÁ EL CRONOGRAMA — Diagrama de Gantt');
+    L.push('Proyecto “Gestión de Horarios” — Módulo Administrativo/a — Ingeniería del Software, 3.er año TI');
+    L.push('');
+    L.push('Integrantes: ' + nombre1() + ' y ' + nombre2());
+    L.push('');
+    var tareas = filas.filter(function(f){ return f.id !== 'H'; })
+                      .sort(function(a, b){ return a.id < b.id ? -1 : 1; });
+    L.push('TAREAS (' + tareas.length + ' de 7)');
+    tareas.forEach(function(f){
+      var t = TAREAS[f.id];
+      L.push('  ' + f.id + '. ' + t.n + '  —  días ' + (f.inicio + 1) + ' a ' + fin(f) + ' (' + t.d + ' d)  —  Responsable: ' + etiquetaResp(f.resp));
+    });
+    var h = fila('H');
+    L.push('  H. ' + HITO.n + '  —  ' + (h ? 'día ' + h.dia : 'sin ubicar'));
+    L.push('');
+    L.push('Último día de trabajo: ' + (ultimoDia() ? 'día ' + ultimoDia() : '—'));
+    var blob = new Blob([L.join('\n')], {type:'text/plain;charset=utf-8'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'cronograma-modulo-administrativo.txt';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+  });
+
+  window.addEventListener('resize', render);
+
+  // ---------- tabla del módulo (código, tarea y dependencias) ----------
+  (function armarTabla(){
+    var tb = document.getElementById('tabla');
+    CODIGOS.concat(['H']).forEach(function(id){
+      var esH = id === 'H';
+      var nec = esH ? HITO.nec : TAREAS[id].nec;
+      var tr = document.createElement('tr');
+      if (esH) tr.className = 'hito';
+      tr.innerHTML = '<td class="c cod-t">' + id + '</td>' +
+        '<td>' + (esH ? '◆ ' + HITO.n : TAREAS[id].n) + '</td>' +
+        '<td class="c">' + (nec.length ? nec.join(' y ') : '—') + '</td>';
+      tb.appendChild(tr);
+    });
+  })();
+
+  armarBanco();
+  render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>¿Quién hace qué? · Diagrama de casos de uso</title>
+<style>
+  :root{
+    --dark:#21295C; --prim:#065A82; --teal:#1C7293; --light:#EEF4F8;
+    --acc:#F4A259; --accd:#B06A16; --grey:#5A6B78; --line:#B9CBD8;
+    --ok:#1E7A46; --bad:#B3261E;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Calibri,Segoe UI,system-ui,sans-serif;color:#1a2430;background:#F6F9FB;font-size:15px}
+  header{background:var(--dark);color:#fff;padding:14px 22px}
+  header h1{margin:0;font-size:21px;font-family:Cambria,Georgia,serif}
+  header p{margin:4px 0 0;font-size:13px;color:#CADCFC}
+  .wrap{display:flex;gap:16px;padding:16px 22px 28px;align-items:flex-start}
+  .side{width:310px;flex:0 0 310px}
+  .main{flex:1;min-width:0}
+  .card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:14px;margin-bottom:14px}
+  .card h2{margin:0 0 8px;font-size:15px;color:var(--prim);font-family:Cambria,Georgia,serif}
+  label{display:block;font-size:12px;color:var(--grey);margin:8px 0 3px}
+  input[type=text],select,textarea{width:100%;padding:7px 9px;border:1px solid var(--line);
+    border-radius:6px;font-family:inherit;font-size:14px;background:#fff}
+  textarea{resize:vertical}
+  .mision{background:var(--light);border-left:4px solid var(--prim);border-radius:6px;padding:10px 12px;margin-top:10px;font-size:13.5px}
+  .mision b{color:var(--dark)}
+  ol.pasos{margin:6px 0 0;padding-left:20px;font-size:13.5px;line-height:1.5}
+  ol.pasos li{margin-bottom:5px}
+  .banco{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+  .chip{border:1px solid var(--line);background:#fff;border-radius:20px;padding:6px 12px;font-size:12.5px;
+    cursor:pointer;user-select:none;transition:.12s;text-align:left}
+  .chip:hover{border-color:var(--prim);background:var(--light)}
+  .chip.usada{opacity:.35;pointer-events:none;text-decoration:line-through}
+  .chip .tag{font-size:9.5px;font-weight:bold;letter-spacing:.03em;margin-right:5px;padding:1px 5px;border-radius:8px}
+  .chip.t-actor .tag{background:#DCE7F2;color:var(--prim)}
+  .chip.t-caso .tag{background:#E6F0EA;color:var(--ok)}
+  .chip.bonus{border-color:var(--acc);background:#FFF7EC}
+  .chip.bonus:hover{background:#FBE7D3}
+  .toolbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px}
+  .tool{border:1px solid var(--line);background:#fff;border-radius:6px;padding:7px 12px;font-size:13px;
+    cursor:pointer;font-family:inherit}
+  .tool:hover{border-color:var(--prim)}
+  .tool.on{background:var(--prim);color:#fff;border-color:var(--prim)}
+  .tool.del.on{background:var(--bad);border-color:var(--bad);color:#fff}
+  .hint{font-size:12.5px;color:var(--grey);margin-left:auto}
+  .lienzo-wrap{overflow-x:auto;border-radius:8px}
+  #lienzo{position:relative;height:560px;min-width:640px;background:#fff;border:2px solid var(--prim);border-radius:8px;
+    overflow:hidden;background-image:radial-gradient(#E3EBF1 1px,transparent 1px);background-size:22px 22px}
+  #svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+  #limite{position:absolute;top:16px;bottom:16px;border:2px dashed var(--teal);border-radius:10px;
+    background:rgba(28,114,147,.03)}
+  #limite .etiq{position:absolute;top:8px;left:12px;font-size:12px;font-weight:bold;font-style:italic;color:var(--teal)}
+
+  .nodo{position:absolute;cursor:grab;user-select:none}
+  .nodo.sel .figura, .nodo.sel .ovalo{outline:3px solid var(--acc);outline-offset:2px}
+
+  .actor-node{width:98px;display:flex;flex-direction:column;align-items:center;text-align:center}
+  .actor-node .figura svg{display:block}
+  .actor-node .etiqueta{margin-top:4px;font-size:12.5px;font-weight:bold;color:var(--dark);line-height:1.2}
+
+  .caso-node{width:200px}
+  .caso-node .ovalo{min-height:64px;border-radius:50%;background:var(--light);border:2px solid var(--prim);
+    display:flex;align-items:center;justify-content:center;padding:10px 20px;text-align:center;
+    font-size:12.5px;font-weight:bold;color:var(--dark);line-height:1.25;box-shadow:0 2px 5px rgba(0,0,0,.10)}
+
+  .acciones{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .btn{border:0;border-radius:6px;padding:10px 16px;font-size:14px;font-family:inherit;cursor:pointer;font-weight:bold}
+  .btn.p{background:var(--prim);color:#fff}
+  .btn.s{background:#fff;color:var(--prim);border:1px solid var(--prim)}
+  .btn:hover{filter:brightness(1.08)}
+  #resultado{margin-top:12px}
+  .chk{display:flex;gap:9px;align-items:flex-start;padding:7px 10px;border-radius:6px;margin-bottom:5px;font-size:13.5px}
+  .chk.ok{background:#E8F5EE;color:#12522f}
+  .chk.no{background:#FBEAE8;color:#7d1a14}
+  .chk .ic{font-weight:bold;flex:0 0 16px}
+  .puntaje{font-size:14px;font-weight:bold;margin:10px 0 6px;color:var(--dark)}
+  .leyenda{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--grey);margin-top:8px;align-items:center}
+  .leyenda span{display:flex;align-items:center;gap:6px}
+  .ln{display:inline-block;width:26px;height:0;border-top:2px solid var(--prim)}
+  .ov-mini{display:inline-block;width:22px;height:14px;border-radius:50%;border:2px solid var(--prim);background:var(--light)}
+  .bx-mini{display:inline-block;width:18px;height:14px;border:2px dashed var(--teal);border-radius:3px}
+  @media print{
+    .side,.toolbar,.acciones,header p{display:none}
+    .wrap{display:block;padding:0}
+    #lienzo{height:auto;min-height:560px;page-break-inside:avoid}
+    body{font-size:12px}
+  }
+  @media (max-width:900px){.wrap{flex-direction:column}.side{width:100%;flex:auto}}
+</style>
+</head>
+<body>
+<header>
+  <h1>¿Quién hace qué?</h1>
+  <p>Ingeniería del Software · 3.er año TI · Diagrama de casos de uso · Proyecto “Gestión de Horarios” · en parejas</p>
+</header>
+
+<div class="wrap">
+  <div class="side">
+    <div class="card">
+      <h2>1. Su equipo</h2>
+      <label>Integrantes</label>
+      <input type="text" id="nombres" placeholder="Nombre y nombre">
+      <label>Foco de la pareja</label>
+      <select id="foco"></select>
+      <div class="mision" id="mision"></div>
+    </div>
+
+    <div class="card">
+      <h2>2. Qué hacer</h2>
+      <ol class="pasos">
+        <li>Lean las frases del banco: son fragmentos reales del proyecto “Gestión de Horarios”.</li>
+        <li>Arrastren al lienzo los <b>actores</b> (figura) y los <b>casos de uso</b> (óvalo) de su foco.</li>
+        <li>Con <b>Asociar</b>, hagan clic en el actor y después en el caso de uso que realiza.</li>
+        <li>Toquen <b>Verificar</b> y corrijan lo que falte.</li>
+        <li>Si les sobra tiempo, sumen el actor <b>Alumno/a</b> del banco (★ desafío).</li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <h2>3. Banco de elementos</h2>
+      <div class="banco" id="banco"></div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="toolbar">
+      <button class="tool on" data-modo="mover">✋ Mover</button>
+      <button class="tool" data-modo="asociar">→ Asociar</button>
+      <button class="tool del" data-modo="borrar">✕ Borrar</button>
+      <span class="hint" id="pista">Arrastrá los elementos para acomodarlos.</span>
+    </div>
+
+    <div class="lienzo-wrap">
+      <div id="lienzo">
+        <div id="limite"><span class="etiq">«sistema» Gestión de Horarios</span></div>
+        <svg id="svg"></svg>
+      </div>
+    </div>
+
+    <div class="leyenda">
+      <span><i class="ln"></i> asociación actor ↔ caso de uso</span>
+      <span><span class="bx-mini"></span> límite del sistema: lo que es responsabilidad de Gestión de Horarios</span>
+      <span><span class="ov-mini"></span> caso de uso</span>
+    </div>
+
+    <div class="acciones">
+      <button class="btn p" id="verificar">Verificar mi diagrama</button>
+      <button class="btn s" id="limpiar">Vaciar lienzo</button>
+      <button class="btn s" id="descargar">Descargar resumen</button>
+      <button class="btn s" id="imprimir">Imprimir / Guardar PDF</button>
+    </div>
+
+    <div id="resultado"></div>
+
+    <div class="card" style="margin-top:14px">
+      <h2>Ticket de salida</h2>
+      <label>La diferencia entre un actor y un caso de uso, en mis palabras</label>
+      <textarea id="t1" rows="2"></textarea>
+      <label>Un caso de uso que nos parece que falta en el banco, para Gestión de Horarios</label>
+      <input type="text" id="t2">
+      <label>¿Alumno/a debería ser un actor de este sistema? ¿Por qué sí o por qué no?</label>
+      <textarea id="t3" rows="2"></textarea>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var BOUNDARY_LEFT = 190; // debe coincidir con el margen usado al ubicar los casos de uso
+
+  // ---------- datos: fragmentos reales del proyecto "Gestión de Horarios" ----------
+  var ELEMENTOS = [
+    {id:'actor_docente',        tipo:'actor', n:'Docente'},
+    {id:'caso_registrar',       tipo:'caso',  n:'Registrar a todos los docentes',                         actorId:'actor_administrativo'},
+    {id:'caso_elegir_horas',    tipo:'caso',  n:'Elegir horas de una o más materias',                     actorId:'actor_docente'},
+    {id:'actor_administrativo', tipo:'actor', n:'Administrativo/a'},
+    {id:'caso_grilla',          tipo:'caso',  n:'Crear la grilla semanal de un grupo',                    actorId:'actor_administrativo'},
+    {id:'caso_confirmar',       tipo:'caso',  n:'Confirmar el horario en el centro',                      actorId:'actor_docente'},
+    {id:'caso_informar_salon',  tipo:'caso',  n:'Informar en tiempo real en qué salón está un docente',   actorId:'actor_administrativo'},
+    {id:'caso_distribucion',    tipo:'caso',  n:'Gestionar distribución de horarios',                     actorId:'actor_administrativo'},
+    {id:'actor_alumno',         tipo:'actor', n:'Alumno/a',                                                bonus:true},
+    {id:'caso_ubicacion',       tipo:'caso',  n:'Consultar en qué salón se encuentra un docente ahora',              actorId:'actor_alumno', bonus:true}
+  ];
+  var ELEM = {};
+  ELEMENTOS.forEach(function(e){ ELEM[e.id] = e; });
+
+  var ACTORES_CORE = ['actor_docente','actor_administrativo'];
+  var CASOS_CORE = ELEMENTOS.filter(function(e){ return e.tipo === 'caso' && !e.bonus; }).map(function(e){ return e.id; });
+
+  var FOCOS = {
+    docente: {
+      etiqueta:'Foco · Docente',
+      objetivo:'Ubiquen al actor Docente y asócienlo con lo que puede hacer: elegir sus horas y confirmar el horario.'
+    },
+    administrativo: {
+      etiqueta:'Foco · Administrativo/a',
+      objetivo:'Ubiquen al actor Administrativo/a y asócienlo con las tareas de gestión: registrar docentes, crear la grilla, informar en tiempo real y gestionar la distribución de horarios.'
+    },
+    todos: {
+      etiqueta:'Foco · Todo el sistema',
+      objetivo:'Completen el diagrama entero: los dos actores principales y sus casos de uso. Si les alcanza el tiempo, sumen el actor Alumno/a.'
+    }
+  };
+
+  var nodos = [];   // {id, tipo, x, y, el}
+  var enlaces = []; // {de, a}  (de = id de origen del clic, a = id de destino)
+  var modo = 'mover';
+  var origen = null;
+  var contadorActor = 0, contadorCaso = 0;
+
+  var lienzo = document.getElementById('lienzo');
+  var svg = document.getElementById('svg');
+  var banco = document.getElementById('banco');
+  var pista = document.getElementById('pista');
+  var selFoco = document.getElementById('foco');
+  var misionBox = document.getElementById('mision');
+  var limite = document.getElementById('limite');
+
+  limite.style.left = BOUNDARY_LEFT + 'px';
+  limite.style.right = '16px';
+
+  // ---------- foco ----------
+  Object.keys(FOCOS).forEach(function(k){
+    var o = document.createElement('option');
+    o.value = k; o.textContent = FOCOS[k].etiqueta;
+    selFoco.appendChild(o);
+  });
+  function pintarMision(){
+    misionBox.innerHTML = '<b>Objetivo:</b> ' + FOCOS[selFoco.value].objetivo;
+  }
+  selFoco.addEventListener('change', pintarMision);
+  pintarMision();
+
+  // ---------- banco ----------
+  ELEMENTOS.forEach(function(e){
+    var b = document.createElement('button');
+    b.className = 'chip t-' + e.tipo + (e.bonus ? ' bonus' : '');
+    b.dataset.id = e.id;
+    var tag = document.createElement('span');
+    tag.className = 'tag';
+    tag.textContent = e.tipo === 'actor' ? 'ACTOR' : 'CASO';
+    b.appendChild(tag);
+    b.appendChild(document.createTextNode((e.bonus ? '★ ' : '') + e.n));
+    b.addEventListener('click', function(){ agregar(e.id); });
+    banco.appendChild(b);
+  });
+
+  function marcarBanco(){
+    var usados = {};
+    nodos.forEach(function(n){ usados[n.id] = true; });
+    Array.prototype.forEach.call(banco.children, function(ch){
+      ch.classList.toggle('usada', !!usados[ch.dataset.id]);
+    });
+  }
+
+  // ---------- ubicación inicial ----------
+  function actorSpot(i){
+    return {x: 46, y: 40 + i * 172};
+  }
+  function casoSpot(i){
+    var cols = 2, colW = 226, rowH = 90;
+    return {
+      x: BOUNDARY_LEFT + 16 + (i % cols) * colW,
+      y: 44 + Math.floor(i / cols) * rowH
+    };
+  }
+
+  function figuraActorSVG(){
+    return '<svg width="60" height="80" viewBox="0 0 60 80">' +
+      '<circle cx="30" cy="14" r="11" fill="#fff" stroke="var(--prim)" stroke-width="3.5"/>' +
+      '<line x1="30" y1="25" x2="30" y2="50" stroke="var(--prim)" stroke-width="3.5"/>' +
+      '<line x1="30" y1="32" x2="12" y2="45" stroke="var(--prim)" stroke-width="3.5"/>' +
+      '<line x1="30" y1="32" x2="48" y2="45" stroke="var(--prim)" stroke-width="3.5"/>' +
+      '<line x1="30" y1="50" x2="13" y2="76" stroke="var(--prim)" stroke-width="3.5"/>' +
+      '<line x1="30" y1="50" x2="47" y2="76" stroke="var(--prim)" stroke-width="3.5"/>' +
+      '</svg>';
+  }
+
+  function agregar(id){
+    if (nodos.some(function(n){ return n.id === id; })) return;
+    var e = ELEM[id];
+    var pos = e.tipo === 'actor' ? actorSpot(contadorActor++) : casoSpot(contadorCaso++);
+    var el = document.createElement('div');
+    el.className = 'nodo ' + (e.tipo === 'actor' ? 'actor-node' : 'caso-node');
+    el.style.left = pos.x + 'px';
+    el.style.top = pos.y + 'px';
+    if (e.tipo === 'actor'){
+      el.innerHTML = '<div class="figura">' + figuraActorSVG() + '</div><div class="etiqueta">' + e.n + '</div>';
+    } else {
+      el.innerHTML = '<div class="ovalo">' + e.n + '</div>';
+    }
+    el.dataset.id = id;
+    lienzo.appendChild(el);
+    var nodo = {id:id, tipo:e.tipo, x:pos.x, y:pos.y, el:el};
+    nodos.push(nodo);
+    hacerArrastrable(nodo);
+    el.addEventListener('click', function(ev){ clickNodo(nodo, ev); });
+    marcarBanco();
+    dibujar();
+  }
+
+  function quitar(nodo){
+    enlaces = enlaces.filter(function(e){ return e.de !== nodo.id && e.a !== nodo.id; });
+    nodos = nodos.filter(function(n){ return n !== nodo; });
+    nodo.el.remove();
+    marcarBanco();
+    dibujar();
+  }
+
+  // ---------- arrastre (igual mecánica que el diagrama de navegabilidad) ----------
+  function hacerArrastrable(nodo){
+    var dx = 0, dy = 0, moviendo = false;
+    nodo.el.addEventListener('pointerdown', function(ev){
+      if (modo !== 'mover') return;
+      moviendo = true;
+      nodo.el.setPointerCapture(ev.pointerId);
+      var r = lienzo.getBoundingClientRect();
+      dx = ev.clientX - r.left - nodo.x;
+      dy = ev.clientY - r.top - nodo.y;
+      nodo.el.style.cursor = 'grabbing';
+      ev.preventDefault();
+    });
+    nodo.el.addEventListener('pointermove', function(ev){
+      if (!moviendo) return;
+      var r = lienzo.getBoundingClientRect();
+      var w = nodo.el.offsetWidth, h = nodo.el.offsetHeight;
+      nodo.x = Math.max(2, Math.min(lienzo.scrollWidth - w - 2, ev.clientX - r.left - dx));
+      nodo.y = Math.max(2, Math.min(lienzo.clientHeight - h - 2, ev.clientY - r.top - dy));
+      nodo.el.style.left = nodo.x + 'px';
+      nodo.el.style.top = nodo.y + 'px';
+      dibujar();
+    });
+    function fin(){ moviendo = false; nodo.el.style.cursor = 'grab'; }
+    nodo.el.addEventListener('pointerup', fin);
+    nodo.el.addEventListener('pointercancel', fin);
+  }
+
+  // ---------- modos ----------
+  Array.prototype.forEach.call(document.querySelectorAll('.tool'), function(b){
+    b.addEventListener('click', function(){
+      Array.prototype.forEach.call(document.querySelectorAll('.tool'), function(x){ x.classList.remove('on'); });
+      b.classList.add('on');
+      modo = b.dataset.modo;
+      limpiarSeleccion();
+      pista.textContent = ({
+        mover:'Arrastrá los elementos para acomodarlos.',
+        asociar:'Clic en el ACTOR y después en el CASO DE USO que realiza.',
+        borrar:'Clic sobre un elemento para eliminarlo (y sus asociaciones).'
+      })[modo];
+    });
+  });
+
+  function limpiarSeleccion(){
+    origen = null;
+    nodos.forEach(function(n){ n.el.classList.remove('sel'); });
+  }
+
+  function clickNodo(nodo, ev){
+    ev.stopPropagation();
+    if (modo === 'borrar'){ quitar(nodo); return; }
+    if (modo !== 'asociar') return;
+    if (!origen){
+      origen = nodo; nodo.el.classList.add('sel');
+      pista.textContent = 'Ahora hacé clic en el CASO DE USO (o actor) con el que se asocia.';
+      return;
+    }
+    if (origen === nodo){ limpiarSeleccion(); return; }
+    var ya = enlaces.some(function(e){
+      return (e.de === origen.id && e.a === nodo.id) || (e.de === nodo.id && e.a === origen.id);
+    });
+    if (!ya) enlaces.push({de:origen.id, a:nodo.id});
+    limpiarSeleccion();
+    pista.textContent = 'Asociación creada. Clic en el siguiente actor o caso de uso.';
+    dibujar();
+  }
+
+  lienzo.addEventListener('click', function(){ if (origen) limpiarSeleccion(); });
+
+  // ---------- dibujo de asociaciones ----------
+  function centro(n){
+    return {x:n.x + n.el.offsetWidth/2, y:n.y + n.el.offsetHeight/2, w:n.el.offsetWidth, h:n.el.offsetHeight};
+  }
+  function borde(c, hacia){
+    var dx = hacia.x - c.x, dy = hacia.y - c.y;
+    if (dx === 0 && dy === 0) return {x:c.x, y:c.y};
+    var hw = c.w/2 + 2, hh = c.h/2 + 2;
+    var t = Math.min(Math.abs(dx) > 0.0001 ? hw/Math.abs(dx) : 1e9,
+                     Math.abs(dy) > 0.0001 ? hh/Math.abs(dy) : 1e9);
+    return {x:c.x + dx*t, y:c.y + dy*t};
+  }
+  function nodoPorId(id){
+    for (var i=0;i<nodos.length;i++) if (nodos[i].id === id) return nodos[i];
+    return null;
+  }
+  function dibujar(){
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    enlaces.forEach(function(e){
+      var a = nodoPorId(e.de), b = nodoPorId(e.a);
+      if (!a || !b) return;
+      var ca = centro(a), cb = centro(b);
+      var p1 = borde(ca, cb), p2 = borde(cb, ca);
+      var line = document.createElementNS('http://www.w3.org/2000/svg','line');
+      line.setAttribute('x1', p1.x); line.setAttribute('y1', p1.y);
+      line.setAttribute('x2', p2.x); line.setAttribute('y2', p2.y);
+      line.setAttribute('stroke', '#5A6B78');
+      line.setAttribute('stroke-width', '2');
+      svg.appendChild(line);
+    });
+  }
+  window.addEventListener('resize', dibujar);
+
+  // ---------- verificación ----------
+  var resultado = document.getElementById('resultado');
+
+  function tipoDe(id){ var n = nodoPorId(id); return n ? n.tipo : null; }
+
+  function estaDentro(nodo){
+    return nodo.x >= (BOUNDARY_LEFT - 12);
+  }
+  function estaFuera(nodo){
+    return (nodo.x + nodo.el.offsetWidth) <= (BOUNDARY_LEFT + 12);
+  }
+
+  function verificar(){
+    var idsColocados = nodos.map(function(n){ return n.id; });
+    var checks = [];
+
+    var actoresFaltantes = ACTORES_CORE.filter(function(id){ return idsColocados.indexOf(id) < 0; });
+    checks.push({
+      ok: actoresFaltantes.length === 0,
+      t: actoresFaltantes.length === 0
+        ? 'Están los dos actores principales: Docente y Administrativo/a.'
+        : 'Falta ubicar: ' + actoresFaltantes.map(function(id){ return ELEM[id].n; }).join(', ') + '.'
+    });
+
+    var casosColocados = nodos.filter(function(n){ return n.tipo === 'caso' && CASOS_CORE.indexOf(n.id) >= 0; });
+    checks.push({
+      ok: casosColocados.length >= CASOS_CORE.length,
+      t: casosColocados.length >= CASOS_CORE.length
+        ? 'Ubicaron los ' + CASOS_CORE.length + ' casos de uso principales.'
+        : 'Ubicaron ' + casosColocados.length + ' de ' + CASOS_CORE.length + ' casos de uso principales. Revisen el banco.'
+    });
+
+    var casosFuera = casosColocados.filter(function(n){ return !estaDentro(n); });
+    checks.push({
+      ok: casosFuera.length === 0,
+      t: casosFuera.length === 0
+        ? 'Los casos de uso quedaron dentro del rectángulo del sistema.'
+        : 'Hay casos de uso fuera del rectángulo «sistema»: ' + casosFuera.map(function(n){ return ELEM[n.id].n; }).join(', ') + '.'
+    });
+
+    var actoresColocados = nodos.filter(function(n){ return n.tipo === 'actor' && ACTORES_CORE.indexOf(n.id) >= 0; });
+    var actoresDentro = actoresColocados.filter(function(n){ return !estaFuera(n); });
+    checks.push({
+      ok: actoresDentro.length === 0,
+      t: actoresDentro.length === 0
+        ? 'Los actores quedaron fuera del rectángulo del sistema, como corresponde.'
+        : 'Hay actores metidos dentro del rectángulo «sistema»: ' + actoresDentro.map(function(n){ return ELEM[n.id].n; }).join(', ') + '.'
+    });
+
+    var tiposInvalidos = enlaces.filter(function(e){
+      var td = tipoDe(e.de), ta = tipoDe(e.a);
+      return !td || !ta || td === ta;
+    });
+    checks.push({
+      ok: enlaces.length > 0 && tiposInvalidos.length === 0,
+      t: enlaces.length === 0
+        ? 'Todavía no trazaron ninguna asociación.'
+        : (tiposInvalidos.length === 0
+          ? 'Todas las asociaciones conectan un actor con un caso de uso.'
+          : 'Hay asociaciones que no conectan un actor con un caso de uso (revisen las que unen dos elementos del mismo tipo).')
+    });
+
+    function esCorrecta(e){
+      var casoId = tipoDe(e.de) === 'caso' ? e.de : (tipoDe(e.a) === 'caso' ? e.a : null);
+      var actorId = tipoDe(e.de) === 'actor' ? e.de : (tipoDe(e.a) === 'actor' ? e.a : null);
+      if (!casoId || !actorId) return false;
+      return ELEM[casoId].actorId === actorId;
+    }
+    var validas = enlaces.filter(function(e){ return tipoDe(e.de) !== tipoDe(e.a); });
+    var incorrectas = validas.filter(function(e){ return !esCorrecta(e); });
+    checks.push({
+      ok: validas.length > 0 && incorrectas.length === 0,
+      t: incorrectas.length === 0
+        ? (validas.length > 0 ? 'Las asociaciones que trazaron unen a cada caso de uso con el actor que corresponde.' : 'Todavía no hay asociaciones correctas para revisar.')
+        : 'Hay ' + incorrectas.length + ' asociación(es) que no corresponden según el proyecto — revisen a qué actor pertenece cada caso de uso.'
+    });
+
+    var casosSinActorCorrecto = casosColocados.filter(function(n){
+      return !validas.some(function(e){
+        var casoId = tipoDe(e.de) === 'caso' ? e.de : e.a;
+        return casoId === n.id && esCorrecta(e);
+      });
+    });
+    checks.push({
+      ok: casosColocados.length > 0 && casosSinActorCorrecto.length === 0,
+      t: casosSinActorCorrecto.length === 0
+        ? 'Cada caso de uso ubicado está asociado con su actor.'
+        : 'Todavía sin asociar a su actor: ' + casosSinActorCorrecto.map(function(n){ return ELEM[n.id].n; }).join(', ') + '.'
+    });
+
+    var buenos = checks.filter(function(c){ return c.ok; }).length;
+    var html = '<div class="puntaje">Verificación: ' + buenos + ' de ' + checks.length + ' criterios logrados</div>';
+    checks.forEach(function(c){
+      html += '<div class="chk ' + (c.ok ? 'ok' : 'no') + '"><span class="ic">' + (c.ok ? '✓' : '✕') +
+              '</span><span>' + c.t + '</span></div>';
+    });
+
+    if (buenos === checks.length){
+      var alumnoOk = idsColocados.indexOf('actor_alumno') >= 0 && idsColocados.indexOf('caso_ubicacion') >= 0 &&
+        validas.some(function(e){ return esCorrecta(e) && (e.de === 'caso_ubicacion' || e.a === 'caso_ubicacion'); });
+      html += '<div class="chk ok"><span class="ic">★</span><span>Diagrama principal completo. ' +
+        (alumnoOk
+          ? '¡Y además sumaron y asociaron correctamente al actor Alumno/a — buen trabajo con el desafío!'
+          : 'Si les queda tiempo, animense con el desafío del actor Alumno/a.') +
+        '</span></div>';
+    }
+
+    resultado.innerHTML = html;
+    if (resultado.scrollIntoView) resultado.scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+
+  document.getElementById('verificar').addEventListener('click', verificar);
+
+  document.getElementById('limpiar').addEventListener('click', function(){
+    if (!nodos.length) return;
+    if (!confirm('¿Vaciar el lienzo y empezar de nuevo?')) return;
+    nodos.forEach(function(n){ n.el.remove(); });
+    nodos = []; enlaces = []; contadorActor = 0; contadorCaso = 0;
+    marcarBanco(); dibujar(); resultado.innerHTML = '';
+  });
+
+  document.getElementById('imprimir').addEventListener('click', function(){ window.print(); });
+
+  document.getElementById('descargar').addEventListener('click', function(){
+    var L = [];
+    L.push('¿QUIÉN HACE QUÉ? — Diagrama de casos de uso');
+    L.push('Proyecto “Gestión de Horarios” — Ingeniería del Software, 3.er año TI');
+    L.push('');
+    L.push('Integrantes: ' + (document.getElementById('nombres').value || '(sin completar)'));
+    L.push('Foco: ' + FOCOS[selFoco.value].etiqueta);
+    L.push('');
+    var actores = nodos.filter(function(n){ return n.tipo === 'actor'; });
+    var casos = nodos.filter(function(n){ return n.tipo === 'caso'; });
+    L.push('ACTORES (' + actores.length + ')');
+    actores.forEach(function(n){ L.push('  · ' + ELEM[n.id].n); });
+    L.push('');
+    L.push('CASOS DE USO (' + casos.length + ')');
+    casos.forEach(function(n){ L.push('  · ' + ELEM[n.id].n); });
+    L.push('');
+    L.push('ASOCIACIONES (' + enlaces.length + ')');
+    enlaces.forEach(function(e){
+      var actorId = tipoDe(e.de) === 'actor' ? e.de : e.a;
+      var casoId = tipoDe(e.de) === 'caso' ? e.de : e.a;
+      L.push('  ' + (ELEM[actorId] ? ELEM[actorId].n : '?') + '  ——  ' + (ELEM[casoId] ? ELEM[casoId].n : '?'));
+    });
+    L.push('');
+    L.push('TICKET DE SALIDA');
+    L.push('  Actor vs. caso de uso: ' + (document.getElementById('t1').value || '(sin completar)'));
+    L.push('  Caso de uso que falta: ' + (document.getElementById('t2').value || '(sin completar)'));
+    L.push('  ¿Alumno/a como actor?: ' + (document.getElementById('t3').value || '(sin completar)'));
+    var blob = new Blob([L.join('\n')], {type:'text/plain;charset=utf-8'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'casos-de-uso-' + selFoco.value + '.txt';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+  });
+
+  console.log('Actividad lista. Elementos disponibles:', ELEMENTOS.length);
+})();
+</script>
+</body>
+</html>

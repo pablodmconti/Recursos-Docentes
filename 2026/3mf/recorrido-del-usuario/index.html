@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>El recorrido del usuario · Diagrama de navegabilidad</title>
+<style>
+  :root{
+    --dark:#21295C; --prim:#065A82; --teal:#1C7293; --light:#EEF4F8;
+    --acc:#F4A259; --accd:#B06A16; --grey:#5A6B78; --line:#B9CBD8;
+    --ok:#1E7A46; --bad:#B3261E;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Calibri,Segoe UI,system-ui,sans-serif;color:#1a2430;background:#F6F9FB;font-size:15px}
+  header{background:var(--dark);color:#fff;padding:14px 22px}
+  header h1{margin:0;font-size:21px;font-family:Cambria,Georgia,serif}
+  header p{margin:4px 0 0;font-size:13px;color:#CADCFC}
+  .wrap{display:flex;gap:16px;padding:16px 22px 28px;align-items:flex-start}
+  .side{width:310px;flex:0 0 310px}
+  .main{flex:1;min-width:0}
+  .card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:14px;margin-bottom:14px}
+  .card h2{margin:0 0 8px;font-size:15px;color:var(--prim);font-family:Cambria,Georgia,serif}
+  label{display:block;font-size:12px;color:var(--grey);margin:8px 0 3px}
+  input[type=text],select,textarea{width:100%;padding:7px 9px;border:1px solid var(--line);
+    border-radius:6px;font-family:inherit;font-size:14px;background:#fff}
+  textarea{resize:vertical}
+  .mision{background:var(--light);border-left:4px solid var(--prim);border-radius:6px;padding:10px 12px;margin-top:10px;font-size:13.5px}
+  .mision b{color:var(--dark)}
+  ol.pasos{margin:6px 0 0;padding-left:20px;font-size:13.5px;line-height:1.5}
+  ol.pasos li{margin-bottom:5px}
+  .banco{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+  .chip{border:1px solid var(--line);background:#fff;border-radius:20px;padding:5px 11px;font-size:12.5px;
+    cursor:pointer;user-select:none;transition:.12s}
+  .chip:hover{border-color:var(--prim);background:var(--light)}
+  .chip.usada{opacity:.35;pointer-events:none;text-decoration:line-through}
+  .toolbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px}
+  .tool{border:1px solid var(--line);background:#fff;border-radius:6px;padding:7px 12px;font-size:13px;
+    cursor:pointer;font-family:inherit}
+  .tool:hover{border-color:var(--prim)}
+  .tool.on{background:var(--prim);color:#fff;border-color:var(--prim)}
+  .tool.acc.on{background:var(--acc);border-color:var(--acc);color:#3A2E13}
+  .tool.del.on{background:var(--bad);border-color:var(--bad);color:#fff}
+  .hint{font-size:12.5px;color:var(--grey);margin-left:auto}
+  #lienzo{position:relative;height:520px;background:#fff;border:2px solid var(--prim);border-radius:8px;
+    overflow:hidden;background-image:radial-gradient(#E3EBF1 1px,transparent 1px);background-size:22px 22px}
+  #svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+  .pant{position:absolute;width:158px;min-height:52px;background:var(--light);border:2px solid var(--prim);
+    border-radius:8px;padding:7px 8px;font-size:13px;font-weight:bold;color:var(--dark);text-align:center;
+    cursor:grab;user-select:none;display:flex;align-items:center;justify-content:center;
+    box-shadow:0 2px 5px rgba(0,0,0,.12);line-height:1.25}
+  .pant.sel{border-color:var(--acc);background:#FBE7D3;box-shadow:0 0 0 3px rgba(244,162,89,.35)}
+  .pant .num{position:absolute;top:-9px;left:-9px;width:22px;height:22px;border-radius:50%;background:var(--prim);
+    color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+  .acciones{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .btn{border:0;border-radius:6px;padding:10px 16px;font-size:14px;font-family:inherit;cursor:pointer;font-weight:bold}
+  .btn.p{background:var(--prim);color:#fff}
+  .btn.s{background:#fff;color:var(--prim);border:1px solid var(--prim)}
+  .btn:hover{filter:brightness(1.08)}
+  #resultado{margin-top:12px}
+  .chk{display:flex;gap:9px;align-items:flex-start;padding:7px 10px;border-radius:6px;margin-bottom:5px;font-size:13.5px}
+  .chk.ok{background:#E8F5EE;color:#12522f}
+  .chk.no{background:#FBEAE8;color:#7d1a14}
+  .chk .ic{font-weight:bold;flex:0 0 16px}
+  .puntaje{font-size:14px;font-weight:bold;margin:10px 0 6px;color:var(--dark)}
+  .leyenda{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--grey);margin-top:8px}
+  .leyenda span{display:flex;align-items:center;gap:6px}
+  .ln{display:inline-block;width:26px;height:0;border-top:2px solid var(--prim)}
+  .ln.d{border-top:2px dashed var(--accd)}
+  @media print{
+    .side,.toolbar,.acciones,header p{display:none}
+    .wrap{display:block;padding:0}
+    #lienzo{height:auto;min-height:520px;page-break-inside:avoid}
+    body{font-size:12px}
+  }
+  @media (max-width:900px){.wrap{flex-direction:column}.side{width:100%;flex:auto}}
+</style>
+</head>
+<body>
+<header>
+  <h1>El recorrido del usuario</h1>
+  <p>Ingeniería del Software · 3.er año TI · Diagrama de navegabilidad · Proyecto “Gestión de Horarios” · 20 minutos, en duplas</p>
+</header>
+
+<div class="wrap">
+  <div class="side">
+    <div class="card">
+      <h2>1. Su equipo</h2>
+      <label>Integrantes</label>
+      <input type="text" id="nombres" placeholder="Nombre y nombre">
+      <label>Rol de usuario asignado</label>
+      <select id="rol"></select>
+      <div class="mision" id="mision"></div>
+    </div>
+
+    <div class="card">
+      <h2>2. Qué hacer</h2>
+      <ol class="pasos">
+        <li>Elijan del banco las pantallas que ese rol necesita. Ojo: hay pantallas de otros roles.</li>
+        <li>Acomódenlas en el lienzo arrastrándolas.</li>
+        <li>Con <b>Enlace principal</b>, hagan clic en la pantalla de origen y después en la de destino.</li>
+        <li>Agreguen al menos un <b>enlace alternativo</b> (punteado) y las rutas de retorno.</li>
+        <li>Toquen <b>Verificar</b> y corrijan lo que falte.</li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <h2>3. Banco de pantallas</h2>
+      <div class="banco" id="banco"></div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="toolbar">
+      <button class="tool on" data-modo="mover">✋ Mover</button>
+      <button class="tool" data-modo="principal">→ Enlace principal</button>
+      <button class="tool acc" data-modo="alternativa">⇢ Enlace alternativo</button>
+      <button class="tool del" data-modo="borrar">✕ Borrar</button>
+      <span class="hint" id="pista">Arrastrá las pantallas para acomodarlas.</span>
+    </div>
+
+    <div id="lienzo">
+      <svg id="svg">
+        <defs>
+          <marker id="mp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="#065A82"/>
+          </marker>
+          <marker id="ma" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="#B06A16"/>
+          </marker>
+        </defs>
+      </svg>
+    </div>
+
+    <div class="leyenda">
+      <span><i class="ln"></i> ruta principal</span>
+      <span><i class="ln d"></i> ruta alternativa</span>
+      <span>▭ pantalla · las flechas indican el sentido de la navegación</span>
+    </div>
+
+    <div class="acciones">
+      <button class="btn p" id="verificar">Verificar mi diagrama</button>
+      <button class="btn s" id="limpiar">Vaciar lienzo</button>
+      <button class="btn s" id="descargar">Descargar resumen</button>
+      <button class="btn s" id="imprimir">Imprimir / Guardar PDF</button>
+    </div>
+
+    <div id="resultado"></div>
+
+    <div class="card" style="margin-top:14px">
+      <h2>Ticket de salida</h2>
+      <label>Un elemento del diagrama de navegabilidad que aprendí hoy</label>
+      <input type="text" id="t1">
+      <label>Una duda que me queda</label>
+      <input type="text" id="t2">
+      <label>¿Por qué eligieron esa ruta principal y no otra?</label>
+      <textarea id="t3" rows="2"></textarea>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var PANTALLAS = [
+    {id:'login',   n:'Login'},
+    {id:'error',   n:'Error de acceso'},
+    {id:'menudoc', n:'Menú docente'},
+    {id:'mihor',   n:'Mi horario semanal'},
+    {id:'detmat',  n:'Detalle de materia'},
+    {id:'misdatos',n:'Editar mis datos'},
+    {id:'panelg',  n:'Panel de gestión'},
+    {id:'altadoc', n:'Alta de docente'},
+    {id:'asignar', n:'Asignar horas al grupo'},
+    {id:'grilla',  n:'Grilla del grupo'},
+    {id:'panelc',  n:'Panel de consulta'},
+    {id:'cgrupo',  n:'Consulta por grupo'},
+    {id:'donde',   n:'¿Dónde estoy ahora?'},
+    {id:'csalon',  n:'Consulta por salón'},
+    {id:'salir',   n:'Cerrar sesión'}
+  ];
+  var NOMBRE = {};
+  PANTALLAS.forEach(function(p){ NOMBRE[p.id] = p.n; });
+
+  var LIBRES = ['login','error','salir'];
+
+  var ROLES = {
+    docente: {
+      etiqueta:'ROL 1 · Docente',
+      objetivo:'Consultar su horario semanal y abrir el detalle de una materia que dicta.',
+      requiere:['login','menudoc','mihor','detmat'],
+      meta:'detmat',
+      permitidas:['login','error','salir','menudoc','mihor','detmat','misdatos']
+    },
+    administrativo: {
+      etiqueta:'ROL 2 · Administrativo',
+      objetivo:'Registrar un docente nuevo y asignarle horas en un grupo de la escuela.',
+      requiere:['login','panelg','altadoc','asignar'],
+      meta:'asignar',
+      permitidas:['login','error','salir','panelg','altadoc','asignar','grilla','misdatos']
+    },
+    estudiante: {
+      etiqueta:'ROL 3 · Estudiante',
+      objetivo:'Averiguar en qué salón está su clase en este preciso momento.',
+      requiere:['login','panelc','cgrupo','donde'],
+      meta:'donde',
+      permitidas:['login','error','salir','panelc','cgrupo','donde']
+    },
+    adscripto: {
+      etiqueta:'ROL 4 · Adscripto',
+      objetivo:'Saber qué docente está en determinado salón y qué materia dicta ahora.',
+      requiere:['login','panelc','csalon','grilla'],
+      meta:'csalon',
+      permitidas:['login','error','salir','panelc','csalon','grilla','cgrupo','detmat']
+    }
+  };
+
+  var nodos = [];   // {id, x, y, el}
+  var enlaces = []; // {de, a, tipo}
+  var modo = 'mover';
+  var origen = null;
+  var contador = 0;
+
+  var lienzo = document.getElementById('lienzo');
+  var svg = document.getElementById('svg');
+  var banco = document.getElementById('banco');
+  var pista = document.getElementById('pista');
+  var selRol = document.getElementById('rol');
+  var misionBox = document.getElementById('mision');
+
+  // ---------- rol ----------
+  Object.keys(ROLES).forEach(function(k){
+    var o = document.createElement('option');
+    o.value = k; o.textContent = ROLES[k].etiqueta;
+    selRol.appendChild(o);
+  });
+  function pintarMision(){
+    var r = ROLES[selRol.value];
+    misionBox.innerHTML = '<b>Objetivo del rol:</b> ' + r.objetivo;
+  }
+  selRol.addEventListener('change', function(){ pintarMision(); resultado.innerHTML=''; });
+  pintarMision();
+
+  // ---------- banco ----------
+  PANTALLAS.forEach(function(p){
+    var b = document.createElement('button');
+    b.className = 'chip'; b.textContent = p.n; b.dataset.id = p.id;
+    b.addEventListener('click', function(){ agregar(p.id); });
+    banco.appendChild(b);
+  });
+
+  function marcarBanco(){
+    var usados = {};
+    nodos.forEach(function(n){ usados[n.id] = true; });
+    Array.prototype.forEach.call(banco.children, function(ch){
+      ch.classList.toggle('usada', !!usados[ch.dataset.id]);
+    });
+  }
+
+  function libreSpot(){
+    var cols = 4, i = nodos.length;
+    var x = 26 + (i % cols) * 180;
+    var y = 26 + Math.floor(i / cols) * 96;
+    if (y > lienzo.clientHeight - 70) y = lienzo.clientHeight - 70;
+    return {x:x, y:y};
+  }
+
+  function agregar(id){
+    if (nodos.some(function(n){ return n.id === id; })) return;
+    var pos = libreSpot();
+    var el = document.createElement('div');
+    el.className = 'pant';
+    el.style.left = pos.x + 'px';
+    el.style.top = pos.y + 'px';
+    contador++;
+    el.innerHTML = '<span class="num">P' + contador + '</span>' + NOMBRE[id];
+    el.dataset.id = id;
+    lienzo.appendChild(el);
+    var nodo = {id:id, x:pos.x, y:pos.y, el:el};
+    nodos.push(nodo);
+    hacerArrastrable(nodo);
+    el.addEventListener('click', function(ev){ clickNodo(nodo, ev); });
+    marcarBanco();
+    dibujar();
+  }
+
+  function quitar(nodo){
+    enlaces = enlaces.filter(function(e){ return e.de !== nodo.id && e.a !== nodo.id; });
+    nodos = nodos.filter(function(n){ return n !== nodo; });
+    nodo.el.remove();
+    renumerar();
+    marcarBanco();
+    dibujar();
+  }
+
+  function renumerar(){
+    contador = 0;
+    nodos.forEach(function(n){
+      contador++;
+      n.el.innerHTML = '<span class="num">P' + contador + '</span>' + NOMBRE[n.id];
+    });
+  }
+
+  // ---------- arrastre ----------
+  function hacerArrastrable(nodo){
+    var dx = 0, dy = 0, moviendo = false;
+    nodo.el.addEventListener('pointerdown', function(ev){
+      if (modo !== 'mover') return;
+      moviendo = true;
+      nodo.el.setPointerCapture(ev.pointerId);
+      var r = lienzo.getBoundingClientRect();
+      dx = ev.clientX - r.left - nodo.x;
+      dy = ev.clientY - r.top - nodo.y;
+      nodo.el.style.cursor = 'grabbing';
+      ev.preventDefault();
+    });
+    nodo.el.addEventListener('pointermove', function(ev){
+      if (!moviendo) return;
+      var r = lienzo.getBoundingClientRect();
+      var w = nodo.el.offsetWidth, h = nodo.el.offsetHeight;
+      nodo.x = Math.max(2, Math.min(lienzo.clientWidth - w - 2, ev.clientX - r.left - dx));
+      nodo.y = Math.max(2, Math.min(lienzo.clientHeight - h - 2, ev.clientY - r.top - dy));
+      nodo.el.style.left = nodo.x + 'px';
+      nodo.el.style.top = nodo.y + 'px';
+      dibujar();
+    });
+    function fin(){ moviendo = false; nodo.el.style.cursor = 'grab'; }
+    nodo.el.addEventListener('pointerup', fin);
+    nodo.el.addEventListener('pointercancel', fin);
+  }
+
+  // ---------- modos ----------
+  Array.prototype.forEach.call(document.querySelectorAll('.tool'), function(b){
+    b.addEventListener('click', function(){
+      Array.prototype.forEach.call(document.querySelectorAll('.tool'), function(x){ x.classList.remove('on'); });
+      b.classList.add('on');
+      modo = b.dataset.modo;
+      limpiarSeleccion();
+      pista.textContent = ({
+        mover:'Arrastrá las pantallas para acomodarlas.',
+        principal:'Clic en la pantalla de ORIGEN y después en la de DESTINO.',
+        alternativa:'Enlace punteado: clic en ORIGEN y después en DESTINO.',
+        borrar:'Clic sobre una pantalla para eliminarla (y sus enlaces).'
+      })[modo];
+    });
+  });
+
+  function limpiarSeleccion(){
+    origen = null;
+    nodos.forEach(function(n){ n.el.classList.remove('sel'); });
+  }
+
+  function clickNodo(nodo, ev){
+    ev.stopPropagation();
+    if (modo === 'borrar'){ quitar(nodo); return; }
+    if (modo !== 'principal' && modo !== 'alternativa') return;
+    if (!origen){
+      origen = nodo; nodo.el.classList.add('sel');
+      pista.textContent = 'Ahora hacé clic en la pantalla de DESTINO.';
+      return;
+    }
+    if (origen === nodo){ limpiarSeleccion(); return; }
+    var tipo = modo;
+    var ya = enlaces.some(function(e){ return e.de === origen.id && e.a === nodo.id && e.tipo === tipo; });
+    if (!ya) enlaces.push({de:origen.id, a:nodo.id, tipo:tipo});
+    limpiarSeleccion();
+    pista.textContent = 'Enlace creado. Clic en el siguiente ORIGEN.';
+    dibujar();
+  }
+
+  lienzo.addEventListener('click', function(){ if (origen) limpiarSeleccion(); });
+
+  // ---------- dibujo de flechas ----------
+  function centro(n){
+    return {x:n.x + n.el.offsetWidth/2, y:n.y + n.el.offsetHeight/2, w:n.el.offsetWidth, h:n.el.offsetHeight};
+  }
+  function borde(c, hacia){
+    var dx = hacia.x - c.x, dy = hacia.y - c.y;
+    if (dx === 0 && dy === 0) return {x:c.x, y:c.y};
+    var hw = c.w/2 + 4, hh = c.h/2 + 4;
+    var t = Math.min(Math.abs(dx) > 0.0001 ? hw/Math.abs(dx) : 1e9,
+                     Math.abs(dy) > 0.0001 ? hh/Math.abs(dy) : 1e9);
+    return {x:c.x + dx*t, y:c.y + dy*t};
+  }
+  function nodoPorId(id){
+    for (var i=0;i<nodos.length;i++) if (nodos[i].id === id) return nodos[i];
+    return null;
+  }
+  function dibujar(){
+    Array.prototype.slice.call(svg.querySelectorAll('path')).forEach(function(p){
+      if (p.parentNode.tagName.toLowerCase() !== 'marker') p.remove();
+    });
+    enlaces.forEach(function(e){
+      var a = nodoPorId(e.de), b = nodoPorId(e.a);
+      if (!a || !b) return;
+      var ca = centro(a), cb = centro(b);
+      var p1 = borde(ca, cb), p2 = borde(cb, ca);
+      var mx = (p1.x + p2.x)/2, my = (p1.y + p2.y)/2;
+      var dx = p2.x - p1.x, dy = p2.y - p1.y;
+      var len = Math.sqrt(dx*dx + dy*dy) || 1;
+      var curva = 16;
+      var cx = mx - dy/len*curva, cy = my + dx/len*curva;
+      var path = document.createElementNS('http://www.w3.org/2000/svg','path');
+      path.setAttribute('d','M'+p1.x+','+p1.y+' Q'+cx+','+cy+' '+p2.x+','+p2.y);
+      path.setAttribute('fill','none');
+      path.setAttribute('stroke-width','2.2');
+      if (e.tipo === 'alternativa'){
+        path.setAttribute('stroke','#B06A16');
+        path.setAttribute('stroke-dasharray','7,5');
+        path.setAttribute('marker-end','url(#ma)');
+      } else {
+        path.setAttribute('stroke','#065A82');
+        path.setAttribute('marker-end','url(#mp)');
+      }
+      svg.appendChild(path);
+    });
+  }
+  window.addEventListener('resize', dibujar);
+
+  // ---------- verificación ----------
+  var resultado = document.getElementById('resultado');
+
+  function alcanzables(desde){
+    var vistos = {}, cola = [desde];
+    vistos[desde] = true;
+    while (cola.length){
+      var act = cola.shift();
+      enlaces.forEach(function(e){
+        if (e.de === act && !vistos[e.a]){ vistos[e.a] = true; cola.push(e.a); }
+      });
+    }
+    return vistos;
+  }
+
+  function verificar(){
+    var r = ROLES[selRol.value];
+    var ids = nodos.map(function(n){ return n.id; });
+    var checks = [];
+
+    var faltan = r.requiere.filter(function(x){ return ids.indexOf(x) < 0; });
+    checks.push({
+      ok: faltan.length === 0,
+      t: faltan.length === 0
+        ? 'Están todas las pantallas que el rol necesita.'
+        : 'Faltan pantallas imprescindibles: ' + faltan.map(function(x){ return NOMBRE[x]; }).join(', ') + '.'
+    });
+
+    var intrusas = ids.filter(function(x){ return r.permitidas.indexOf(x) < 0; });
+    checks.push({
+      ok: intrusas.length === 0,
+      t: intrusas.length === 0
+        ? 'Ninguna pantalla queda fuera del alcance del rol.'
+        : 'Acceso indebido: este rol no debería llegar a ' + intrusas.map(function(x){ return NOMBRE[x]; }).join(', ') + '.'
+    });
+
+    var huerfanas = ids.filter(function(x){
+      if (x === 'login') return false;
+      return !enlaces.some(function(e){ return e.a === x; });
+    });
+    checks.push({
+      ok: huerfanas.length === 0,
+      t: huerfanas.length === 0
+        ? 'Ninguna pantalla quedó huérfana: a todas se llega por algún enlace.'
+        : 'Pantalla huérfana (nadie enlaza hacia ella): ' + huerfanas.map(function(x){ return NOMBRE[x]; }).join(', ') + '.'
+    });
+
+    var sinSalida = ids.filter(function(x){
+      return !enlaces.some(function(e){ return e.de === x; });
+    });
+    checks.push({
+      ok: sinSalida.length === 0,
+      t: sinSalida.length === 0
+        ? 'Todas las pantallas tienen forma de salir: no hay callejones sin salida.'
+        : 'Callejón sin salida (no se puede volver desde ahí): ' + sinSalida.map(function(x){ return NOMBRE[x]; }).join(', ') + '.'
+    });
+
+    var alc = ids.indexOf('login') >= 0 ? alcanzables('login') : {};
+    checks.push({
+      ok: !!alc[r.meta],
+      t: alc[r.meta]
+        ? 'La ruta principal llega desde el Login hasta “' + NOMBRE[r.meta] + '”.'
+        : 'Todavía no hay un camino completo desde el Login hasta “' + NOMBRE[r.meta] + '”.'
+    });
+
+    var hayAlt = enlaces.some(function(e){ return e.tipo === 'alternativa'; });
+    checks.push({
+      ok: hayAlt,
+      t: hayAlt ? 'Incluyeron al menos una ruta alternativa.' : 'Falta al menos una ruta alternativa (enlace punteado).'
+    });
+
+    var hayRetorno = enlaces.some(function(e){ return e.a === 'login' || esRetorno(e); });
+    checks.push({
+      ok: hayRetorno,
+      t: hayRetorno ? 'Hay al menos una ruta de retorno.' : 'Falta una ruta de retorno: agreguen una flecha de vuelta hacia una pantalla anterior.'
+    });
+
+    var buenos = checks.filter(function(c){ return c.ok; }).length;
+    var html = '<div class="puntaje">Verificación: ' + buenos + ' de ' + checks.length + ' criterios logrados</div>';
+    checks.forEach(function(c){
+      html += '<div class="chk ' + (c.ok ? 'ok' : 'no') + '"><span class="ic">' + (c.ok ? '✓' : '✕') +
+              '</span><span>' + c.t + '</span></div>';
+    });
+    if (buenos === checks.length){
+      html += '<div class="chk ok"><span class="ic">★</span><span>Diagrama completo. Preparen la frase que justifica el recorrido para la puesta en común.</span></div>';
+    }
+    resultado.innerHTML = html;
+    if (resultado.scrollIntoView) resultado.scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+
+  function esRetorno(e){
+    // existe también el enlace en sentido opuesto => hay vuelta
+    return enlaces.some(function(o){ return o.de === e.a && o.a === e.de; });
+  }
+
+  document.getElementById('verificar').addEventListener('click', verificar);
+
+  document.getElementById('limpiar').addEventListener('click', function(){
+    if (!nodos.length) return;
+    if (!confirm('¿Vaciar el lienzo y empezar de nuevo?')) return;
+    nodos.forEach(function(n){ n.el.remove(); });
+    nodos = []; enlaces = []; contador = 0;
+    marcarBanco(); dibujar(); resultado.innerHTML = '';
+  });
+
+  document.getElementById('imprimir').addEventListener('click', function(){ window.print(); });
+
+  document.getElementById('descargar').addEventListener('click', function(){
+    var r = ROLES[selRol.value];
+    var L = [];
+    L.push('EL RECORRIDO DEL USUARIO — Diagrama de navegabilidad');
+    L.push('Proyecto “Gestión de Horarios” — Ingeniería del Software, 3.er año TI');
+    L.push('');
+    L.push('Integrantes: ' + (document.getElementById('nombres').value || '(sin completar)'));
+    L.push('Rol: ' + r.etiqueta);
+    L.push('Objetivo: ' + r.objetivo);
+    L.push('');
+    L.push('PANTALLAS (' + nodos.length + ')');
+    nodos.forEach(function(n, i){ L.push('  P' + (i+1) + '. ' + NOMBRE[n.id]); });
+    L.push('');
+    L.push('ENLACES (' + enlaces.length + ')');
+    enlaces.forEach(function(e){
+      L.push('  ' + NOMBRE[e.de] + '  ' + (e.tipo === 'alternativa' ? '-->' : '==>') + '  ' + NOMBRE[e.a] +
+             '   [' + (e.tipo === 'alternativa' ? 'ruta alternativa' : 'ruta principal') + ']');
+    });
+    L.push('');
+    L.push('JUSTIFICACIÓN DEL RECORRIDO');
+    L.push('  ' + (document.getElementById('t3').value || '(sin completar)'));
+    L.push('');
+    L.push('TICKET DE SALIDA');
+    L.push('  Aprendí: ' + (document.getElementById('t1').value || '(sin completar)'));
+    L.push('  Duda: ' + (document.getElementById('t2').value || '(sin completar)'));
+    var blob = new Blob([L.join('\n')], {type:'text/plain;charset=utf-8'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'navegabilidad-' + selRol.value + '.txt';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+  });
+
+  console.log('Actividad lista. Pantallas disponibles:', PANTALLAS.length);
+})();
+</script>
+</body>
+</html>
