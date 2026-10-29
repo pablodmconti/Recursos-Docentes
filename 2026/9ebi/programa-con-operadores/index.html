@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Programá con operadores — Actividad interactiva</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Misma identidad que "Operadores en Python": consola oscura, amarillo de Python y barra de estado. */
+:root {
+  --bg: #0b1220;
+  --bg-panel: #121a2e;
+  --bg-panel-2: #17213a;
+  --border: #263252;
+  --text: #e9edf6;
+  --text-muted: #8b96b3;
+  --yellow: #ffd43b;
+  --yellow-dim: #d9b32e;
+  --blue: #5b9bd5;
+  --success: #6fcf97;
+  --success-bg: rgba(111, 207, 151, 0.14);
+  --error: #ef6461;
+  --error-bg: rgba(239, 100, 97, 0.14);
+  --radius: 10px;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --statusbar-h: 56px;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  line-height: 1.55;
+  padding-bottom: calc(var(--statusbar-h) + 28px);
+  font-variant-ligatures: none;
+}
+code { font-family: var(--font-mono); font-size: 0.92em; }
+p code, li code, td code { color: var(--yellow); }
+
+/* HERO */
+.hero { max-width: 880px; margin: 0 auto; padding: 56px 20px 40px; }
+.terminal-window {
+  background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius);
+  overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.35); margin-bottom: 32px;
+}
+.terminal-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px; background: var(--bg-panel-2); border-bottom: 1px solid var(--border);
+}
+.dot { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+.dot-red { background: #ef6461; }
+.dot-yellow { background: #ffd43b; }
+.dot-green { background: #6fcf97; }
+.terminal-title { margin-left: 8px; font-family: var(--font-mono); font-size: 12.5px; color: var(--text-muted); }
+.terminal-body { padding: 20px 18px 24px; font-family: var(--font-mono); font-size: 14.5px; }
+.prompt-line { margin: 0 0 6px; }
+.prompt-line:last-child { margin-bottom: 0; }
+.prompt { color: var(--blue); margin-right: 8px; }
+.cursor { display: inline-block; color: var(--yellow); animation: blink 1s step-start infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+
+.hero h1 { font-family: var(--font-mono); font-size: clamp(28px, 5vw, 42px); font-weight: 800; margin: 0 0 12px; letter-spacing: -0.02em; }
+.subtitle { color: var(--text-muted); font-size: 16px; max-width: 600px; margin: 0; }
+
+/* TOOLBAR (nombre + PDF) */
+.toolbar { margin-top: 20px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.name-field { display: flex; align-items: center; gap: 8px; }
+.name-field label { font-family: var(--font-mono); font-size: 12.5px; color: var(--text-muted); }
+.name-field input {
+  font-family: var(--font-sans); font-size: 14px; background: var(--bg-panel);
+  border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 6px; min-width: 220px;
+}
+.name-field input:focus-visible { outline: 2px solid var(--yellow); outline-offset: 1px; border-color: var(--blue); }
+.name-field input::placeholder { color: var(--text-muted); opacity: 0.75; }
+.btn-secondary {
+  font-family: var(--font-mono); background: transparent; color: var(--blue);
+  border: 1.5px solid var(--blue); padding: 10px 18px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 13.5px;
+}
+.btn-secondary:hover { background: rgba(91,155,213,0.12); }
+.btn-secondary:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
+.toolbar-hint { font-size: 12.5px; color: var(--text-muted); }
+.fallback { margin-top: 18px; background: var(--error-bg); border: 1px solid var(--error); border-radius: var(--radius); padding: 12px 16px; font-size: 14px; }
+.fallback a { color: var(--yellow); }
+
+/* BLOQUES */
+.block { max-width: 880px; margin: 0 auto; padding: 40px 20px; border-top: 1px solid var(--border); }
+.block-header { display: flex; gap: 16px; align-items: baseline; margin-bottom: 20px; }
+.block-number {
+  font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--yellow);
+  border: 1px solid var(--yellow-dim); border-radius: 6px; padding: 3px 8px; flex-shrink: 0;
+}
+.block-header h2 { font-family: var(--font-mono); font-size: 22px; margin: 0 0 4px; }
+.block-desc { color: var(--text-muted); margin: 0; font-size: 14.5px; }
+
+/* TABLAS DE REFERENCIA */
+.table-wrap { overflow-x: auto; margin-bottom: 28px; border: 1px solid var(--border); border-radius: var(--radius); }
+.ref-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.ref-table th {
+  text-align: left; background: var(--bg-panel-2); color: var(--text-muted);
+  font-weight: 600; padding: 10px 14px; font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.03em;
+}
+.ref-table td { padding: 10px 14px; border-top: 1px solid var(--border); vertical-align: top; }
+.op-symbol { font-family: var(--font-mono); color: var(--yellow); font-weight: 700; white-space: nowrap; }
+.ref-code { font-family: var(--font-mono); white-space: nowrap; }
+.ref-out { font-family: var(--font-mono); color: var(--success); white-space: nowrap; }
+.ref-out.none { font-family: var(--font-sans); color: var(--text-muted); font-style: italic; white-space: normal; }
+
+.howto { margin: 0; padding-left: 20px; display: grid; gap: 6px; color: var(--text); font-size: 14.5px; }
+.howto li::marker { color: var(--yellow); }
+
+/* EJERCICIOS */
+.exercises { display: flex; flex-direction: column; gap: 16px; }
+.exercise { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 18px 20px; display: grid; gap: 12px; min-width: 0; }
+.exercise.is-solved { border-color: rgba(111, 207, 151, 0.55); }
+.exercise-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.exercise-num { font-family: var(--font-mono); font-size: 11.5px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.badge { font-family: var(--font-mono); font-size: 11.5px; padding: 2px 10px; border-radius: 999px; border: 1px solid var(--border); color: var(--text-muted); white-space: nowrap; }
+.badge.ok { color: var(--success); border-color: var(--success); background: var(--success-bg); }
+.task { margin: 0; font-size: 15.5px; }
+
+.code-box { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--bg); }
+.datos { padding: 10px 14px; border-bottom: 1px dashed var(--border); background: rgba(91,155,213,0.06); }
+.datos-label { display: block; font-family: var(--font-mono); font-size: 11px; color: var(--blue); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+.datos pre { margin: 0; font-family: var(--font-mono); font-size: 14.5px; color: var(--text-muted); white-space: pre-wrap; overflow-wrap: anywhere; }
+.editor { display: grid; grid-template-columns: auto minmax(0, 1fr); }
+.gutter {
+  font-family: var(--font-mono); font-size: 15px; line-height: 1.6; color: #4d5a7c; text-align: right;
+  padding: 12px 10px 12px 14px; user-select: none; white-space: pre; border-right: 1px solid var(--border);
+  font-variant-numeric: tabular-nums;
+}
+.code {
+  font-family: var(--font-mono); font-size: 15px; line-height: 1.6; color: var(--text); background: transparent;
+  border: none; resize: vertical; padding: 12px 14px; outline: none; tab-size: 4; white-space: pre;
+  overflow: auto; width: 100%; caret-color: var(--yellow); min-height: 3.4em;
+}
+.code:focus-visible { box-shadow: inset 0 0 0 2px var(--yellow-dim); }
+
+.ex-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.btn {
+  font-family: var(--font-mono); font-size: 13.5px; font-weight: 700; border-radius: 8px; padding: 8px 16px; cursor: pointer;
+  border: 1.5px solid transparent;
+}
+.btn-run { background: var(--yellow); color: #14181f; }
+.btn-run:hover { background: #ffe066; }
+.btn-check { background: transparent; color: var(--blue); border-color: var(--blue); }
+.btn-check:hover { background: rgba(91,155,213,0.12); }
+.btn-hint { background: transparent; color: var(--text-muted); border-color: var(--border); }
+.btn-hint:hover { color: var(--text); border-color: var(--text-muted); }
+.btn:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
+.btn:disabled { opacity: 0.5; cursor: wait; }
+
+.pista { margin: 0; font-size: 14px; color: var(--text); background: var(--bg-panel-2); border-left: 3px solid var(--yellow-dim); padding: 8px 12px; border-radius: 0 6px 6px 0; }
+.output {
+  margin: 0; font-family: var(--font-mono); font-size: 14px; background: var(--bg); border: 1px solid var(--border);
+  border-radius: 6px; padding: 10px 14px; white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.output .muted { color: var(--text-muted); }
+.output .err { color: var(--error); }
+.feedback { font-size: 14px; border-radius: 6px; padding: 10px 12px; }
+.feedback b { font-family: var(--font-mono); }
+.feedback-correct { color: var(--success); background: var(--success-bg); }
+.feedback-incorrect { color: #ffb3b1; background: var(--error-bg); }
+.feedback .what { display: block; font-family: var(--font-mono); font-size: 13px; color: var(--error); margin-bottom: 4px; overflow-wrap: anywhere; }
+
+/* CIERRE */
+.completion { max-width: 880px; margin: 0 auto 60px; padding: 0 20px; }
+.completion-card { background: var(--bg-panel); border: 1px solid var(--yellow-dim); border-radius: var(--radius); padding: 32px; text-align: center; }
+.completion-card h2 { font-family: var(--font-mono); margin: 0 0 8px; }
+.completion-score { font-family: var(--font-mono); font-size: 40px; font-weight: 800; color: var(--yellow); margin: 12px 0 4px; }
+.completion-pct { color: var(--text-muted); margin-bottom: 16px; }
+.completion-msg { margin: 0; }
+
+/* BARRA DE ESTADO */
+.statusbar { position: fixed; bottom: 0; left: 0; right: 0; height: calc(var(--statusbar-h) + env(safe-area-inset-bottom, 0px)); padding-bottom: env(safe-area-inset-bottom, 0px); background: var(--bg-panel-2); border-top: 1px solid var(--border); z-index: 10; }
+.statusbar-inner { max-width: 880px; margin: 0 auto; height: var(--statusbar-h); display: flex; align-items: center; gap: 16px; padding: 0 20px; font-family: var(--font-mono); font-size: 12.5px; color: var(--text-muted); }
+.status-item { white-space: nowrap; }
+#scoreDisplay { color: var(--text); font-weight: 600; }
+.progress-track { flex: 1; height: 6px; background: var(--bg); border-radius: 999px; overflow: hidden; border: 1px solid var(--border); }
+.progress-fill { height: 100%; background: var(--yellow); width: 0%; transition: width .3s ease; }
+
+@media (max-width: 600px) {
+  .hero { padding: 36px 16px 28px; }
+  .block { padding: 32px 16px; }
+  .exercise { padding: 14px; }
+  .statusbar-inner { font-size: 11px; gap: 10px; padding: 0 16px; }
+  .status-item:first-child { display: none; }
+  .completion { padding: 0 16px; }
+  .completion-card { padding: 24px 18px; }
+  .name-field { width: 100%; }
+  .name-field input { flex: 1; min-width: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
+
+/* SOLO PARA IMPRIMIR */
+.print-header, .print-summary, .print-code, .print-state { display: none; }
+.print-field { font-size: 13px; }
+.fill-line { display: inline-block; min-width: 140px; border-bottom: 1px solid #333; margin-left: 4px; }
+
+@media print {
+  @page { margin: 14mm; }
+  :root {
+    --bg: #ffffff; --bg-panel: #ffffff; --bg-panel-2: #f2f2f2; --border: #cccccc;
+    --text: #14181f; --text-muted: #555555; --yellow: #14181f; --yellow-dim: #333333; --blue: #1c4a6e;
+    color-scheme: light;
+  }
+  body { padding-bottom: 0; }
+  .toolbar, .statusbar, .completion, .cursor, .fallback, .ex-actions, .pista, .output, .feedback,
+  .editor, .table-wrap, #block-como, .badge, .terminal-window { display: none !important; }
+  .hero { padding: 0 0 8px; }
+  .hero h1 { font-size: 26px; }
+  .block { padding: 18px 0; }
+  .exercise { break-inside: avoid; padding: 12px 14px; }
+  .print-header { display: flex; gap: 24px; flex-wrap: wrap; margin: 14px 0 10px; }
+  .print-summary { display: block; margin: 0 0 6px; font-family: var(--font-mono); font-size: 14px; font-weight: 700; padding: 10px 14px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-panel-2); }
+  .print-code { display: block; margin: 0; padding: 10px 14px; font-family: var(--font-mono); font-size: 13px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .print-state { display: block; font-family: var(--font-mono); font-size: 12.5px; font-weight: 700; }
+  .datos { background: #f5f7fa; }
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="terminal-window">
+    <div class="terminal-bar">
+      <span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span>
+      <span class="terminal-title">python3 — programa.py</span>
+    </div>
+    <div class="terminal-body">
+      <p class="prompt-line"><span class="prompt">$</span>python3 programa.py</p>
+      <p class="prompt-line"><span class="prompt">&gt;&gt;&gt;</span><span id="typedIntro"></span><span class="cursor">▌</span></p>
+    </div>
+  </div>
+  <h1>Programá con operadores</h1>
+  <p class="subtitle">Ya sabés predecir qué hace cada operador. Ahora te toca escribir el código: completá cada ejercicio, ejecutalo y comprobá si funciona.</p>
+
+  <div class="print-header">
+    <div class="print-field">Nombre: <span class="fill-line" id="printNameValue"></span></div>
+    <div class="print-field">Fecha: <span class="fill-line" id="printDateValue"></span></div>
+    <div class="print-field">Grupo: <span class="fill-line"></span></div>
+  </div>
+  <div class="print-summary" id="printSummary"></div>
+
+  <div class="toolbar">
+    <div class="name-field">
+      <label for="studentName">Tu nombre</label>
+      <input type="text" id="studentName" placeholder="Escribí tu nombre y apellido" autocomplete="name">
+    </div>
+    <button type="button" id="pdfBtn" class="btn-secondary">⬇ Descargar como PDF</button>
+    <span class="toolbar-hint">Se abre el diálogo de impresión: elegí "Guardar como PDF" como destino.</span>
+  </div>
+
+  <div class="fallback" id="fallback" hidden>
+    <strong>No se pudo cargar Python.</strong> La actividad necesita conexión a internet. Revisá la conexión y recargá la página.
+  </div>
+</header>
+
+<main>
+  <section class="block" id="block-como" aria-labelledby="h-como">
+    <div class="block-header">
+      <span class="block-number">00</span>
+      <div>
+        <h2 id="h-como">Cómo funciona</h2>
+        <p class="block-desc">Antes de empezar, mirá qué hace cada instrucción que vas a usar.</p>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="ref-table">
+        <thead><tr><th>Escribís</th><th>Qué hace</th><th>En pantalla</th></tr></thead>
+        <tbody>
+          <tr><td class="ref-code">print(2 + 3)</td><td>Calcula la cuenta y muestra el resultado.</td><td class="ref-out">5</td></tr>
+          <tr><td class="ref-code">edad = 15</td><td>Guarda el número 15 en la variable <code>edad</code>.</td><td class="ref-out none">No muestra nada</td></tr>
+          <tr><td class="ref-code">print(edad)</td><td>Muestra lo que guarda la variable.</td><td class="ref-out">15</td></tr>
+          <tr><td class="ref-code">print(edad &gt;= 18)</td><td>Muestra si la comparación es verdadera o falsa.</td><td class="ref-out">False</td></tr>
+          <tr><td class="ref-code">print("Total:", 750)</td><td>Muestra un texto y un número, separados por un espacio.</td><td class="ref-out">Total: 750</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <ul class="howto">
+      <li>Los <b>datos</b> de cada ejercicio ya están cargados: usá sus nombres, no hace falta escribirlos de nuevo.</li>
+      <li><code>True</code> y <code>False</code> van con mayúscula, y los decimales se escriben con punto: <code>2.5</code>.</li>
+      <li><b>▶ Ejecutar</b> muestra lo que hace tu código. <b>Comprobar</b> lo prueba también con otros datos, para ver si funciona siempre.</li>
+      <li>Tu código queda guardado en este navegador aunque cierres la página.</li>
+    </ul>
+  </section>
+
+  <div id="blocks"></div>
+
+  <div class="completion" id="completion" hidden>
+    <div class="completion-card">
+      <h2 id="completionHeading">¡Programa completo!</h2>
+      <div class="completion-score" id="completionScore"></div>
+      <div class="completion-pct" id="completionPct"></div>
+      <p class="completion-msg">Escribí tu nombre arriba y descargá el PDF para entregarlo.</p>
+    </div>
+  </div>
+</main>
+
+<div class="statusbar">
+  <div class="statusbar-inner">
+    <span class="status-item">● programa.py</span>
+    <span class="status-item" id="scoreDisplay">Resueltos: 0/0</span>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <span class="status-item" id="progressText">0%</span>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt-stdlib.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  /* ---------------- Ejercicios ----------------
+     vars: datos ya cargados (los del primer test son los que ve el estudiante)
+     tests: se ejecuta el código con cada juego de datos y se esperan los valores de expect, en orden
+     must: operadores que el código tiene que usar (alcanza con uno de la lista any) */
+  const BLOCKS = [
+    {
+      id: 'aritmeticos', number: '01', title: 'Operadores aritméticos',
+      desc: 'Calculan con números. Escribí la cuenta dentro de print().',
+      headers: ['Operador', 'Qué hace', 'Ejemplo', 'En pantalla'],
+      table: [
+        ['+', 'Suma', 'print(7 + 2)', '9'],
+        ['-', 'Resta', 'print(7 - 2)', '5'],
+        ['*', 'Multiplicación', 'print(7 * 2)', '14'],
+        ['/', 'División (siempre con decimales)', 'print(7 / 2)', '3.5'],
+        ['//', 'División entera (descarta los decimales)', 'print(7 // 2)', '3'],
+        ['%', 'Resto de la división', 'print(7 % 2)', '1'],
+        ['**', 'Potencia', 'print(7 ** 2)', '49']
+      ],
+      exercises: [
+        { id: 'a1', task: 'Mostrá el resultado de sumar 15 y 27.',
+          starter: 'print()',
+          tests: [{ vars: {}, expect: [42] }],
+          must: [{ any: ['+'], msg: 'Usá el operador + para que Python haga la suma.' }],
+          pista: 'Dentro de los paréntesis de print() escribí la cuenta, como en una calculadora.' },
+        { id: 'a2', task: 'Mostrá el área de un rectángulo: la base por la altura.',
+          starter: 'print()',
+          tests: [{ vars: { base: 8, altura: 5 }, expect: [40] }, { vars: { base: 3, altura: 7 }, expect: [21] }],
+          must: [{ any: ['*'], msg: 'Para multiplicar se usa *.' }],
+          pista: 'Usá los nombres de las variables: Python ya sabe cuánto vale cada una.' },
+        { id: 'a3', task: 'Los caramelos se reparten en partes iguales entre los amigos, sin partir ninguno. Mostrá cuántos le tocan a cada uno.',
+          starter: 'print()',
+          tests: [{ vars: { caramelos: 17, amigos: 5 }, expect: [3] }, { vars: { caramelos: 23, amigos: 4 }, expect: [5] }],
+          must: [{ any: ['//'], msg: 'Para repartir sin decimales se usa la división entera //.' }],
+          pista: '¿Qué operador divide y descarta los decimales? Está en la tabla.' },
+        { id: 'a4', task: 'Con el mismo reparto, mostrá cuántos caramelos sobran.',
+          starter: 'print()',
+          tests: [{ vars: { caramelos: 17, amigos: 5 }, expect: [2] }, { vars: { caramelos: 23, amigos: 4 }, expect: [3] }],
+          must: [{ any: ['%'], msg: 'Lo que sobra es el resto de la división, y se calcula con %.' }],
+          pista: 'Lo que sobra es el resto de la división.' },
+        { id: 'a5', task: 'Mostrá el área de un cuadrado usando la potencia: el lado elevado a 2.',
+          starter: 'print()',
+          tests: [{ vars: { lado: 4 }, expect: [16] }, { vars: { lado: 7 }, expect: [49] }],
+          must: [{ any: ['**'], msg: 'Para elevar a una potencia se usa **.' }],
+          pista: 'En Python, "elevado a" se escribe con dos asteriscos.' },
+        { id: 'a6', task: 'Mostrá el promedio de las tres notas.',
+          starter: 'print()',
+          tests: [{ vars: { nota1: 7, nota2: 9, nota3: 8 }, expect: [8] }, { vars: { nota1: 6, nota2: 7, nota3: 10 }, expect: [7.6667] }],
+          must: [{ any: ['/'], msg: 'Para el promedio hay que dividir con /.' }],
+          diagnose: function (v, nums) {
+            const sinParentesis = v.nota1 + v.nota2 + v.nota3 / 3;
+            if (nums.some(function (n) { return Math.abs(n - sinParentesis) < 0.01; })) {
+              return 'Python dividió solo la última nota. Encerrá la suma entre paréntesis para que se haga primero.';
+            }
+            return '';
+          },
+          pista: 'Primero se suman las tres notas y después se divide entre 3. Los paréntesis indican qué se hace primero.' }
+      ]
+    },
+    {
+      id: 'comparacion', number: '02', title: 'Operadores de comparación',
+      desc: 'Comparan dos valores. El resultado siempre es True o False.',
+      headers: ['Operador', 'Qué hace', 'Ejemplo', 'En pantalla'],
+      table: [
+        ['==', 'Igual a', 'print(5 == 5)', 'True'],
+        ['!=', 'Distinto de', 'print(5 != 3)', 'True'],
+        ['>', 'Mayor que', 'print(5 > 3)', 'True'],
+        ['<', 'Menor que', 'print(5 < 3)', 'False'],
+        ['>=', 'Mayor o igual que', 'print(5 >= 5)', 'True'],
+        ['<=', 'Menor o igual que', 'print(5 <= 3)', 'False']
+      ],
+      exercises: [
+        { id: 'c1', task: 'Mostrá si la persona es mayor de edad: si su edad es mayor o igual a 18.',
+          starter: 'print()',
+          tests: [{ vars: { edad: 15 }, expect: [false] }, { vars: { edad: 18 }, expect: [true] }, { vars: { edad: 21 }, expect: [true] }],
+          must: [{ any: ['>=', '>', '<=', '<'], msg: 'Usá un operador de comparación, por ejemplo >=.' }],
+          pista: 'Compará la variable edad con el número 18. El resultado tiene que ser True o False.' },
+        { id: 'c2', task: 'Mostrá si el intento coincide con la clave.',
+          starter: 'print()',
+          tests: [{ vars: { clave: 'python123', intento: 'Python123' }, expect: [false] }, { vars: { clave: 'python123', intento: 'python123' }, expect: [true] }],
+          must: [{ any: ['=='], msg: 'Para preguntar si dos valores son iguales se usa == (dos signos igual).' }],
+          pista: 'Compará las dos variables. Fijate en las mayúsculas: para Python, "P" y "p" son distintas.' },
+        { id: 'c3', task: 'La variable color guarda cómo está el semáforo. Mostrá si NO está en verde.',
+          starter: 'print()',
+          tests: [{ vars: { color: 'rojo' }, expect: [true] }, { vars: { color: 'verde' }, expect: [false] }, { vars: { color: 'amarillo' }, expect: [true] }],
+          must: [{ any: ['!='], msg: 'Para "distinto de" se usa !=.' }],
+          pista: 'Compará la variable color con el texto "verde". Los textos van entre comillas.' },
+        { id: 'c4', task: 'Mostrá si el saldo no alcanza para pagar: si el saldo es menor que el precio.',
+          starter: 'print()',
+          tests: [{ vars: { saldo: 120, precio: 150 }, expect: [true] }, { vars: { saldo: 200, precio: 150 }, expect: [false] }, { vars: { saldo: 150, precio: 150 }, expect: [false] }],
+          must: [{ any: ['<', '>'], msg: 'Usá un operador de comparación, por ejemplo < (menor que).' }],
+          pista: 'Las dos cantidades ya están en variables: comparalas.' },
+        { id: 'c5', task: 'Mostrá si el número es par: si el resto de dividirlo entre 2 es igual a 0.',
+          starter: 'print()',
+          tests: [{ vars: { numero: 14 }, expect: [true] }, { vars: { numero: 7 }, expect: [false] }, { vars: { numero: 0 }, expect: [true] }],
+          must: [{ any: ['%'], msg: 'Para calcular el resto se usa %.' }, { any: ['==', '!='], msg: 'Después compará el resto con 0 usando ==.' }],
+          pista: 'Primero calculá el resto con % y después comparalo con 0 usando ==.' }
+      ]
+    },
+    {
+      id: 'logicos', number: '03', title: 'Operadores lógicos',
+      desc: 'Unen o invierten condiciones que valen True o False.',
+      headers: ['Operador', 'Qué hace', 'Ejemplo', 'En pantalla'],
+      table: [
+        ['and', 'Y: True solo si las dos condiciones son True', 'print(True and False)', 'False'],
+        ['or', 'O: True si al menos una condición es True', 'print(True or False)', 'True'],
+        ['not', 'No: invierte el valor', 'print(not True)', 'False']
+      ],
+      exercises: [
+        { id: 'l1', task: 'Puede ir a la excursión quien tiene 14 años o más y trae el permiso firmado. Mostrá si puede ir.',
+          starter: 'print()',
+          tests: [{ vars: { edad: 15, permiso: true }, expect: [true] }, { vars: { edad: 15, permiso: false }, expect: [false] }, { vars: { edad: 12, permiso: true }, expect: [false] }, { vars: { edad: 14, permiso: true }, expect: [true] }],
+          must: [{ any: ['and'], msg: 'Las dos condiciones tienen que cumplirse a la vez: unilas con and.' }],
+          pista: 'Son dos condiciones: la edad (comparala con 14) y el permiso. Unilas con and.' },
+        { id: 'l2', task: 'Mostrá si hoy es fin de semana: si es sábado o es domingo.',
+          starter: 'print()',
+          tests: [{ vars: { es_sabado: false, es_domingo: true }, expect: [true] }, { vars: { es_sabado: false, es_domingo: false }, expect: [false] }, { vars: { es_sabado: true, es_domingo: false }, expect: [true] }],
+          must: [{ any: ['or'], msg: 'Alcanza con que se cumpla una de las dos: usá or.' }],
+          pista: 'Alcanza con que una de las dos variables sea True.' },
+        { id: 'l3', task: 'Mostrá si se puede salir sin paraguas: cuando no llueve.',
+          starter: 'print()',
+          tests: [{ vars: { llueve: true }, expect: [false] }, { vars: { llueve: false }, expect: [true] }],
+          must: [{ any: ['not'], msg: 'Usá not para invertir el valor de la variable.' }],
+          pista: 'not invierte el valor de una variable: lo que era True pasa a ser False.' },
+        { id: 'l4', task: 'Mostrá si la nota está entre 7 y 10, incluidos los dos.',
+          starter: 'print()',
+          tests: [{ vars: { nota: 9 }, expect: [true] }, { vars: { nota: 7 }, expect: [true] }, { vars: { nota: 10 }, expect: [true] }, { vars: { nota: 6 }, expect: [false] }],
+          must: [{ any: ['and'], msg: 'Uní dos comparaciones con and: una para el 7 y otra para el 10.' }],
+          pista: 'nota >= 7 es una de las condiciones. ¿Cuál es la otra? Unilas con and.' }
+      ]
+    },
+    {
+      id: 'desafio', number: '04', title: 'Desafío final',
+      desc: 'Un programa corto que combina lo que practicaste.',
+      exercises: [
+        { id: 'd1', task: '¿Me alcanza la plata? Guardá en la variable total el precio por la cantidad. Después mostrá el total y, en otra línea, si el dinero alcanza para pagarlo.',
+          starter: '# 1. Calculá el total\n\n# 2. Mostrá el total\n\n# 3. Mostrá si el dinero alcanza\n',
+          tests: [{ vars: { precio: 250, cantidad: 3, dinero: 800 }, expect: [750, true] }, { vars: { precio: 300, cantidad: 3, dinero: 800 }, expect: [900, false] }, { vars: { precio: 200, cantidad: 4, dinero: 800 }, expect: [800, true] }],
+          must: [{ any: ['*'], msg: 'El total se calcula multiplicando con *.' }, { any: ['>=', '<='], msg: 'Para saber si alcanza, compará el dinero con el total, por ejemplo con >=.' }],
+          pista: 'Son tres líneas: total = ..., print(total) y una comparación. Ojo: si el dinero es igual al total, también alcanza.' }
+      ]
+    }
+  ];
+
+  const ALL = [];
+  BLOCKS.forEach(function (b) { b.exercises.forEach(function (ex) { ALL.push(ex); }); });
+  const TOTAL = ALL.length;
+
+  /* ---------------- Utilidades ---------------- */
+  const KEY = '9ebi-programa-operadores:';
+  const store = {
+    get: function (k) { try { return window.localStorage.getItem(KEY + k); } catch (e) { return null; } },
+    set: function (k, v) { try { window.localStorage.setItem(KEY + k, v); } catch (e) {} }
+  };
+  function el(tag, cls, text) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+  function pyLiteral(v) {
+    if (v === true) return 'True';
+    if (v === false) return 'False';
+    if (typeof v === 'string') return '"' + v.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"';
+    return String(v);
+  }
+  function prelude(vars) {
+    return Object.keys(vars).map(function (k) { return k + ' = ' + pyLiteral(vars[k]); }).join('\n');
+  }
+  function showValue(v) {
+    if (v === true) return 'True';
+    if (v === false) return 'False';
+    if (typeof v === 'number' && !Number.isInteger(v)) return String(Math.round(v * 100) / 100);
+    return String(v);
+  }
+  function describeVars(vars) {
+    return Object.keys(vars).map(function (k) { return k + ' = ' + pyLiteral(vars[k]); }).join(', ');
+  }
+
+  const OPS = {
+    '+': /\+/, '-': /-/, '*': /(^|[^*])\*(?!\*)/, '/': /(^|[^\/])\/(?!\/)/, '//': /\/\//, '%': /%/, '**': /\*\*/,
+    '==': /==/, '!=': /!=/, '>=': />=/, '<=': /<=/, '>': />(?!=)/, '<': /<(?!=)/,
+    'and': /\band\b/, 'or': /\bor\b/, 'not': /\bnot\b/
+  };
+  function stripCode(code) {
+    return code.replace(/"(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'/g, '""').replace(/#.*$/gm, '');
+  }
+  function tokens(out) {
+    const list = [];
+    out.split('\n').forEach(function (line) {
+      line.trim().split(/\s+/).forEach(function (t) {
+        t = t.replace(/^[(\[¡¿"']+|[)\]:;,!?"']+$/g, '');
+        if (t) list.push(t);
+      });
+    });
+    return list;
+  }
+  function matches(tok, exp) {
+    if (exp === true) return tok === 'True';
+    if (exp === false) return tok === 'False';
+    const n = Number(tok);
+    return tok !== '' && isFinite(n) && Math.abs(n - exp) <= 0.01;
+  }
+  function found(out, expect) {
+    const toks = tokens(out);
+    let j = 0;
+    for (let i = 0; i < expect.length; i++) {
+      while (j < toks.length && !matches(toks[j], expect[i])) j++;
+      if (j >= toks.length) return false;
+      j++;
+    }
+    return true;
+  }
+
+  /* ---------------- Python (Skulpt) ---------------- */
+  let ready = typeof window.Sk !== 'undefined';
+  let busy = false;
+
+  function runPython(code) {
+    let out = '';
+    Sk.configure({
+      output: function (t) { out += t; },
+      read: function (f) {
+        if (Sk.builtinFiles === undefined || Sk.builtinFiles.files[f] === undefined) throw "No se encontró el archivo: '" + f + "'";
+        return Sk.builtinFiles.files[f];
+      },
+      inputfun: function () { const e = new Error('input'); e.tp$name = 'SinInput'; return Promise.reject(e); },
+      inputfunTakesPrompt: true,
+      __future__: Sk.python3,
+      execLimit: 3000,
+      yieldLimit: 100,
+      killableWhile: true,
+      killableFor: true
+    });
+    return Sk.misceval.asyncToPromise(function () {
+      return Sk.importMainWithBody('<stdin>', false, code, true);
+    }).then(function () { return { out: out, error: null }; }, function (e) { return { out: out, error: e }; });
+  }
+
+  function hintFor(name, msg, code, varNames) {
+    if (name === 'SinInput' || /input/.test(msg) && name === 'ExternalError')
+      return 'En esta actividad los datos ya están cargados: no hace falta usar input().';
+    if (name === 'TimeLimitError') return 'El programa tardó demasiado. Revisá si hay algo que se repite sin fin.';
+    if (name === 'TypeError' && /unexpected keyword argument/.test(msg))
+      return 'Para comparar se usan dos signos igual: ==. Un solo = sirve para guardar un valor en una variable.';
+    if (name === 'TypeError' && /not supported between instances/.test(msg))
+      return 'Estás comparando un texto con un número. Revisá las comillas.';
+    if (name === 'TypeError') return 'Estás operando con datos de tipos distintos, por ejemplo un texto y un número.';
+    if (name === 'NameError') {
+      const m = /name '([^']+)'/.exec(msg);
+      const who = m ? m[1] : '';
+      if (who === 'true' || who === 'false') return 'True y False se escriben con mayúscula.';
+      const parecida = varNames.filter(function (v) { return v.toLowerCase() === who.toLowerCase() && v !== who; })[0];
+      if (parecida) return 'La variable se llama «' + parecida + '». Python distingue mayúsculas y minúsculas.';
+      if (/^print$/i.test(who)) return 'Se escribe print, todo en minúscula.';
+      return 'Python no conoce «' + who + '». Si es una variable, revisá que esté escrita igual que en los datos. Si es un texto, va entre comillas.';
+    }
+    if (name === 'SyntaxError' && /EOF/.test(msg)) return 'Falta cerrar algo: un paréntesis o unas comillas.';
+    if (name === 'SyntaxError' || name === 'IndentationError')
+      return 'Hay un error de escritura en esa línea. Revisá paréntesis, comillas, cómo escribiste el operador (>=, ==, sin espacios en el medio) y que no haya espacios al comienzo de la línea.';
+    if (name === 'ZeroDivisionError') return 'Hay una división por cero. Revisá la fórmula.';
+    return 'Leé el mensaje: dice qué tipo de error es y en qué línea está.';
+  }
+
+  function describeError(e, offset, code, varNames) {
+    const name = (e && e.tp$name) || 'Error';
+    let msg = e && e.toString ? e.toString() : String(e);
+    msg = msg.replace(/^[A-Za-z]+:\s*/, '').replace(/ on line \d+$/, '');
+    let line = (e && e.traceback && e.traceback.length && e.traceback[0].lineno) || null;
+    if (line) line = line - offset;
+    return { name: name, msg: msg, line: line && line > 0 ? line : null, hint: hintFor(name, msg, code, varNames) };
+  }
+
+  /* ---------------- Render ---------------- */
+  function renderTable(headers, rows) {
+    const wrap = el('div', 'table-wrap');
+    const t = el('table', 'ref-table');
+    const thead = el('thead'); const tr = el('tr');
+    headers.forEach(function (h) { tr.appendChild(el('th', null, h)); });
+    thead.appendChild(tr); t.appendChild(thead);
+    const tb = el('tbody');
+    rows.forEach(function (r) {
+      const row = el('tr');
+      row.appendChild(el('td', 'op-symbol', r[0]));
+      row.appendChild(el('td', null, r[1]));
+      row.appendChild(el('td', 'ref-code', r[2]));
+      row.appendChild(el('td', 'ref-out', r[3]));
+      tb.appendChild(row);
+    });
+    t.appendChild(tb); wrap.appendChild(t);
+    return wrap;
+  }
+
+  const state = {};   // id -> {solved, attempts, pista}
+  const ui = {};      // id -> elementos
+
+  let numero = 0;
+  const blocksEl = document.getElementById('blocks');
+  BLOCKS.forEach(function (b) {
+    const sec = el('section', 'block'); sec.id = 'block-' + b.id;
+    const head = el('div', 'block-header');
+    head.appendChild(el('span', 'block-number', b.number));
+    const hd = el('div');
+    const h2 = el('h2', null, b.title); h2.id = 'h-' + b.id;
+    hd.appendChild(h2); hd.appendChild(el('p', 'block-desc', b.desc));
+    head.appendChild(hd); sec.appendChild(head);
+    sec.setAttribute('aria-labelledby', 'h-' + b.id);
+    if (b.table) sec.appendChild(renderTable(b.headers, b.table));
+    const list = el('div', 'exercises');
+    b.exercises.forEach(function (ex) { numero++; list.appendChild(renderExercise(ex, numero)); });
+    sec.appendChild(list);
+    blocksEl.appendChild(sec);
+  });
+
+  function renderExercise(ex, n) {
+    const saved = (function () { try { return JSON.parse(store.get('estado:' + ex.id) || 'null'); } catch (e) { return null; } })();
+    state[ex.id] = saved || { solved: false, attempts: 0, pista: false };
+    ex.n = n;
+
+    const box = el('article', 'exercise'); box.id = 'ej-' + ex.id;
+    const top = el('div', 'exercise-top');
+    top.appendChild(el('div', 'exercise-num', 'Ejercicio ' + n));
+    const badge = el('span', 'badge', 'Sin resolver');
+    top.appendChild(badge);
+    box.appendChild(top);
+    box.appendChild(el('p', 'task', ex.task));
+
+    const codeBox = el('div', 'code-box');
+    const vars = ex.tests[0].vars;
+    if (Object.keys(vars).length) {
+      const d = el('div', 'datos');
+      d.appendChild(el('span', 'datos-label', 'Datos ya cargados'));
+      d.appendChild(el('pre', null, prelude(vars)));
+      codeBox.appendChild(d);
+    }
+    const editor = el('div', 'editor');
+    const gutter = el('div', 'gutter'); gutter.setAttribute('aria-hidden', 'true');
+    const ta = el('textarea', 'code');
+    ta.id = 'code-' + ex.id;
+    ta.spellcheck = false;
+    ta.setAttribute('autocomplete', 'off'); ta.setAttribute('autocapitalize', 'off'); ta.setAttribute('autocorrect', 'off');
+    ta.setAttribute('aria-label', 'Tu código para el ejercicio ' + n);
+    const savedCode = store.get('code:' + ex.id);
+    ta.value = savedCode !== null ? savedCode : ex.starter;
+    editor.appendChild(gutter); editor.appendChild(ta);
+    codeBox.appendChild(editor);
+    box.appendChild(codeBox);
+
+    const printCode = el('pre', 'print-code');
+    codeBox.appendChild(printCode);
+    const printState = el('span', 'print-state');
+    box.appendChild(printState);
+
+    const actions = el('div', 'ex-actions');
+    const bRun = el('button', 'btn btn-run', '▶ Ejecutar'); bRun.type = 'button';
+    const bCheck = el('button', 'btn btn-check', 'Comprobar'); bCheck.type = 'button';
+    const bHint = el('button', 'btn btn-hint', 'Pista'); bHint.type = 'button';
+    bHint.setAttribute('aria-expanded', 'false');
+    actions.appendChild(bRun); actions.appendChild(bCheck); actions.appendChild(bHint);
+    box.appendChild(actions);
+
+    const pista = el('p', 'pista', ex.pista); pista.hidden = true;
+    const output = el('pre', 'output'); output.hidden = true; output.setAttribute('aria-live', 'polite');
+    const feedback = el('div', 'feedback'); feedback.hidden = true; feedback.setAttribute('aria-live', 'polite');
+    box.appendChild(pista); box.appendChild(output); box.appendChild(feedback);
+
+    ui[ex.id] = { box: box, badge: badge, ta: ta, gutter: gutter, run: bRun, check: bCheck, output: output, feedback: feedback, printCode: printCode, printState: printState };
+
+    function rows() {
+      const lines = ta.value.split('\n').length;
+      let s = '';
+      for (let i = 1; i <= lines; i++) s += i + (i < lines ? '\n' : '');
+      gutter.textContent = s;
+      ta.rows = Math.max(2, lines + 1);
+    }
+    rows();
+    let t = null;
+    ta.addEventListener('input', function () {
+      rows();
+      clearTimeout(t);
+      t = setTimeout(function () { store.set('code:' + ex.id, ta.value); }, 300);
+    });
+    ta.addEventListener('keydown', function (e) {
+      if (e.key === 'Tab' && !e.shiftKey) {
+        e.preventDefault();
+        const s = ta.selectionStart, en = ta.selectionEnd;
+        ta.value = ta.value.slice(0, s) + '    ' + ta.value.slice(en);
+        ta.selectionStart = ta.selectionEnd = s + 4;
+        ta.dispatchEvent(new Event('input'));
+      } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        run(ex);
+      }
+    });
+    bRun.addEventListener('click', function () { run(ex); });
+    bCheck.addEventListener('click', function () { check(ex); });
+    bHint.addEventListener('click', function () {
+      pista.hidden = !pista.hidden;
+      bHint.setAttribute('aria-expanded', String(!pista.hidden));
+      if (!pista.hidden && !state[ex.id].pista) { state[ex.id].pista = true; save(ex); }
+    });
+    paintState(ex);
+    return box;
+  }
+
+  function save(ex) { store.set('estado:' + ex.id, JSON.stringify(state[ex.id])); }
+
+  function paintState(ex) {
+    const s = state[ex.id], u = ui[ex.id];
+    u.box.classList.toggle('is-solved', s.solved);
+    u.badge.className = 'badge' + (s.solved ? ' ok' : '');
+    u.badge.textContent = s.solved ? '✓ Resuelto' : (s.attempts ? 'Intentos: ' + s.attempts : 'Sin resolver');
+  }
+
+  function setBusy(on) {
+    busy = on;
+    ALL.forEach(function (ex) {
+      ui[ex.id].run.disabled = on || !ready;
+      ui[ex.id].check.disabled = on || !ready;
+    });
+  }
+
+  function showFeedback(ex, ok, html) {
+    const f = ui[ex.id].feedback;
+    f.className = 'feedback ' + (ok ? 'feedback-correct' : 'feedback-incorrect');
+    f.innerHTML = '';
+    f.appendChild(html);
+    f.hidden = false;
+  }
+  function textNode(parts) {
+    const span = el('span');
+    parts.forEach(function (p) {
+      if (typeof p === 'string') span.appendChild(document.createTextNode(p));
+      else span.appendChild(p);
+    });
+    return span;
+  }
+
+  function preludeFor(vars) {
+    const p = prelude(vars);
+    return { code: p ? p + '\n' : '', lines: p ? p.split('\n').length : 0 };
+  }
+
+  function run(ex) {
+    if (!ready || busy) return;
+    const u = ui[ex.id];
+    const code = u.ta.value;
+    const pre = preludeFor(ex.tests[0].vars);
+    u.feedback.hidden = true;
+    setBusy(true);
+    runPython(pre.code + code).then(function (r) {
+      u.output.innerHTML = '';
+      if (r.out) u.output.appendChild(document.createTextNode(r.out));
+      if (r.error) {
+        const info = describeError(r.error, pre.lines, code, Object.keys(ex.tests[0].vars));
+        u.output.appendChild(el('span', 'err', (info.line ? 'Línea ' + info.line + ' · ' : '') + info.name + ': ' + info.msg + '\n'));
+        u.output.appendChild(el('span', 'muted', 'Pista: ' + info.hint));
+      } else if (!r.out) {
+        u.output.appendChild(el('span', 'muted', 'Tu programa no mostró nada. Para ver un resultado, usá print().'));
+      }
+      u.output.hidden = false;
+    }).then(function () { setBusy(false); });
+  }
+
+  function check(ex) {
+    if (!ready || busy) return;
+    const u = ui[ex.id];
+    const code = u.ta.value;
+    const varNames = Object.keys(ex.tests[0].vars);
+    u.output.hidden = true;
+    const clean = stripCode(code).replace(/\s/g, '');
+    if (!clean || clean === 'print()') {
+      showFeedback(ex, false, textNode(['Todavía no escribiste tu código.']));
+      return;
+    }
+    state[ex.id].attempts++;
+    save(ex); paintState(ex);
+    setBusy(true);
+
+    let i = 0;
+    function next() {
+      if (i >= ex.tests.length) return finish();
+      const test = ex.tests[i];
+      const pre = preludeFor(test.vars);
+      return runPython(pre.code + code).then(function (r) {
+        if (r.error) {
+          const info = describeError(r.error, pre.lines, code, varNames);
+          const what = el('span', 'what', (info.line ? 'Línea ' + info.line + ' · ' : '') + info.name + ': ' + info.msg);
+          showFeedback(ex, false, textNode([what, info.hint]));
+          return;
+        }
+        if (!r.out.trim()) {
+          showFeedback(ex, false, textNode(['Tu programa no mostró nada. Usá print() para mostrar el resultado.']));
+          return;
+        }
+        if (!found(r.out, test.expect)) {
+          const shown = r.out.trim().split('\n').join(' / ');
+          let extra = '';
+          if (ex.diagnose) {
+            const nums = tokens(r.out).map(Number).filter(function (n) { return isFinite(n); });
+            extra = ex.diagnose(test.vars, nums);
+          }
+          if (i === 0) {
+            const b = el('b', null, shown);
+            showFeedback(ex, false, textNode(['Tu programa mostró ', b, '. Para estos datos ese no es el resultado. ', extra || 'Si necesitás ayuda, tocá Pista.']));
+          } else {
+            const b1 = el('b', null, describeVars(test.vars));
+            const b2 = el('b', null, test.expect.map(showValue).join(' y '));
+            const b3 = el('b', null, shown);
+            showFeedback(ex, false, textNode(['Con los datos del ejercicio funciona, pero lo probé con ', b1, ' y tendría que mostrar ', b2, '. Mostró ', b3, '. ', extra || 'Usá las variables en lugar de escribir el resultado.']));
+          }
+          return;
+        }
+        i++;
+        return next();
+      });
+    }
+    function finish() {
+      const stripped = stripCode(code);
+      for (let k = 0; k < (ex.must || []).length; k++) {
+        const rule = ex.must[k];
+        if (!rule.any.some(function (op) { return OPS[op].test(stripped); })) {
+          showFeedback(ex, false, textNode(['El resultado es correcto, pero falta algo: ', rule.msg]));
+          return;
+        }
+      }
+      const s = state[ex.id];
+      const nuevo = !s.solved;
+      s.solved = true;
+      save(ex); paintState(ex);
+      const casos = ex.tests.length > 1 ? ' Lo probé con ' + ex.tests.length + ' juegos de datos y funciona con todos.' : '';
+      showFeedback(ex, true, textNode(['✓ ¡Correcto!' + casos]));
+      updateStatus(nuevo);
+    }
+    Promise.resolve(next()).then(function () { setBusy(false); }, function () { setBusy(false); });
+  }
+
+  /* ---------------- Estado general ---------------- */
+  function solvedCount() { return ALL.filter(function (ex) { return state[ex.id].solved; }).length; }
+  function nota() { return (solvedCount() / TOTAL * 10).toFixed(1); }
+
+  function updateStatus(justSolved) {
+    const s = solvedCount();
+    document.getElementById('scoreDisplay').textContent = 'Resueltos: ' + s + '/' + TOTAL;
+    const pct = Math.round(s / TOTAL * 100);
+    document.getElementById('progressText').textContent = pct + '%';
+    document.getElementById('progressFill').style.width = pct + '%';
+    const comp = document.getElementById('completion');
+    if (s === TOTAL) {
+      const intentos = ALL.reduce(function (a, ex) { return a + state[ex.id].attempts; }, 0);
+      const name = document.getElementById('studentName').value.trim();
+      document.getElementById('completionHeading').textContent = name ? '¡Programa completo, ' + name + '!' : '¡Programa completo!';
+      document.getElementById('completionScore').textContent = TOTAL + ' / ' + TOTAL;
+      document.getElementById('completionPct').textContent = 'Resolviste todos los ejercicios en ' + intentos + ' intentos en total.';
+      comp.hidden = false;
+      if (justSolved && comp.scrollIntoView) comp.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else {
+      comp.hidden = true;
+    }
+  }
+
+  /* ---------------- Nombre e impresión ---------------- */
+  const nameInput = document.getElementById('studentName');
+  const savedName = store.get('nombre');
+  if (savedName) nameInput.value = savedName;
+  nameInput.addEventListener('input', function () { store.set('nombre', nameInput.value); });
+
+  const originalTitle = document.title;
+  document.getElementById('pdfBtn').addEventListener('click', function () { window.print(); });
+  window.addEventListener('beforeprint', function () {
+    const name = nameInput.value.trim();
+    document.getElementById('printNameValue').textContent = name;
+    const hoy = new Date();
+    document.getElementById('printDateValue').textContent =
+      ('0' + hoy.getDate()).slice(-2) + '/' + ('0' + (hoy.getMonth() + 1)).slice(-2) + '/' + hoy.getFullYear();
+    if (name) document.title = 'Programa_con_operadores_' + name.replace(/[\\/:*?"<>|]/g, ' ').replace(/\s+/g, '_');
+    document.getElementById('printSummary').textContent =
+      'Resueltos: ' + solvedCount() + '/' + TOTAL + ' (' + Math.round(solvedCount() / TOTAL * 100) + '%) — Nota: ' + nota() + ' / 10';
+    ALL.forEach(function (ex) {
+      const s = state[ex.id], u = ui[ex.id];
+      const code = u.ta.value.trim();
+      u.printCode.textContent = code && code !== 'print()' ? u.ta.value.replace(/\s+$/, '') : '(sin responder)';
+      u.printState.textContent = (s.solved ? '✓ Resuelto' : '✗ Sin resolver') +
+        (s.attempts ? ' · ' + s.attempts + (s.attempts === 1 ? ' intento' : ' intentos') : '') +
+        (s.pista ? ' · usó la pista' : '');
+    });
+  });
+  window.addEventListener('afterprint', function () { document.title = originalTitle; });
+
+  /* ---------------- Inicio ---------------- */
+  if (ready) { try { new Function('return 1')(); } catch (e) { ready = false; } }
+  if (!ready) document.getElementById('fallback').hidden = false;
+  setBusy(false);
+  updateStatus(false);
+
+  const typedEl = document.getElementById('typedIntro');
+  const introText = 'Ahora escribí vos el código...';
+  const reduceMotion = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)').matches : false;
+  if (reduceMotion) typedEl.textContent = introText;
+  else {
+    let k = 0;
+    (function tick() { if (k <= introText.length) { typedEl.textContent = introText.slice(0, k); k++; setTimeout(tick, 45); } })();
+  }
+})();
+</script>
+</body>
+</html>

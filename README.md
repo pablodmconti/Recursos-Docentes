@@ -6,7 +6,7 @@ Materiales interactivos de Pablo Montaña para usar en clase, ordenados por año
 
 | Año | Grupo | Curso | Recurso |
 | --- | --- | --- | --- |
-| 2026 | 9° EBI | Ciencias de la Computación | [Operadores en Python](2026/9ebi/operadores-python/index.html) |
+| 2026 | 9° EBI | Ciencias de la Computación | [Operadores en Python](2026/9ebi/operadores-python/index.html) · [Programá con operadores](2026/9ebi/programa-con-operadores/index.html) |
 | 2026 | 1° EMS | Ciencias Computacionales y Tecnologías Digitales | [Del pseudocódigo a Python](2026/1ems/del-pseudocodigo-a-python/index.html) |
 | 2026 | 3° MF | Ingeniería del Software (práctica didáctica) | [El recorrido del usuario](2026/3mf/recorrido-del-usuario/index.html) · [¿Quién hace qué?](2026/3mf/casos-de-uso/index.html) · [Armá el cronograma](2026/3mf/cronograma-gantt/index.html) |
 
@@ -22,8 +22,8 @@ recursos-docentes/
     ├── index.html                          página del año: un enlace por grupo
     ├── 9ebi/
     │   ├── index.html                      página del grupo: sus recursos
-    │   └── operadores-python/
-    │       └── index.html
+    │   ├── operadores-python/
+    │   └── programa-con-operadores/
     ├── 1ems/
     │   ├── index.html
     │   └── del-pseudocodigo-a-python/      una carpeta por actividad
