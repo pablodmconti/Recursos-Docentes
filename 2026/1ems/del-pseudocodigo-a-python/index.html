@@ -1,0 +1,1138 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Del pseudocódigo a Python</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=JetBrains+Mono:wght@400;600&family=Kalam:wght@400;700&display=swap">
+<style>
+body { margin: 0; }
+[hidden] { display: none !important; }
+img { max-width: 100%; }
+/* Layout: cuaderno cuadriculado de taller. Una columna de lectura; cada sección es un momento de la clase y cada paso empieza con su guía de comandos. */
+:root {
+  --paper: #f5f7fb;
+  --grid: rgba(36, 83, 166, 0.075);
+  --surface: #ffffff;
+  --ink: #15213b;
+  --muted: #55627d;
+  --line: #d5dceb;
+  --blue: #2453a6;
+  --blue-soft: #e4ecfb;
+  --on-blue: #ffffff;
+  --marker: #ffe27a;
+  --run: #ffd23f;
+  --run-ink: #15213b;
+  --ed-bg: #101a2e;
+  --ed-fg: #e7edf9;
+  --ed-muted: #7f8eab;
+  --ed-line: #24314d;
+  --ok: #1d7a4b;
+  --ok-soft: #e1f3e9;
+  --bad: #b3261e;
+  --bad-soft: #fbe7e5;
+
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --hand: "Kalam", "Comic Sans MS", "Chalkboard SE", cursive;
+
+  --s1: 0.875rem; --s2: 1rem; --s3: 1.125rem; --s4: 1.5rem; --s5: clamp(2.1rem, 6vw, 3.4rem);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0d1423; --grid: rgba(140, 172, 235, 0.06); --surface: #141e33; --ink: #e5ebf7; --muted: #9ba9c4;
+    --line: #2a3755; --blue: #82abff; --blue-soft: #1b2a4a; --on-blue: #0d1423; --marker: rgba(255, 214, 72, 0.32);
+    --ed-bg: #080f1d; --ed-fg: #e7edf9; --ed-muted: #6f7f9e; --ed-line: #1f2b45;
+    --ok: #63cf95; --ok-soft: #12301f; --bad: #ff8c80; --bad-soft: #3a1714;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0d1423; --grid: rgba(140, 172, 235, 0.06); --surface: #141e33; --ink: #e5ebf7; --muted: #9ba9c4;
+  --line: #2a3755; --blue: #82abff; --blue-soft: #1b2a4a; --on-blue: #0d1423; --marker: rgba(255, 214, 72, 0.32);
+  --ed-bg: #080f1d; --ed-fg: #e7edf9; --ed-muted: #6f7f9e; --ed-line: #1f2b45;
+  --ok: #63cf95; --ok-soft: #12301f; --bad: #ff8c80; --bad-soft: #3a1714;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background-color: var(--paper);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: var(--s2);
+  line-height: 1.6;
+}
+.wrap {
+  max-width: 860px;
+  margin: 0 auto;
+  padding-block: 40px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid;
+  gap: 56px;
+}
+h1, h2, h3 { font-family: var(--display); line-height: 1.15; text-wrap: balance; margin: 0; }
+h1 { font-size: var(--s5); font-weight: 800; letter-spacing: -0.02em; }
+h2 { font-size: var(--s4); font-weight: 800; }
+h3 { font-size: var(--s3); font-weight: 600; }
+p { margin: 0; max-width: 65ch; }
+ol, ul { margin: 0; padding-left: 1.3em; }
+code { font-family: var(--mono); font-size: 0.92em; }
+p code, li code, dd code { background: var(--blue-soft); color: var(--ink); padding: 0.05em 0.35em; border-radius: 4px; }
+a { color: var(--blue); }
+button { font: inherit; cursor: pointer; }
+:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; border-radius: 4px; }
+.mark { background: linear-gradient(transparent 55%, var(--marker) 55%); color: inherit; padding: 0 0.1em; }
+.eyebrow { font-size: var(--s1); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--blue); }
+
+/* Encabezado */
+.back { justify-self: start; font-size: var(--s1); font-weight: 700; color: var(--blue); text-decoration: none; }
+.back:hover { text-decoration: underline; }
+header { display: grid; gap: 18px; }
+header .lead { font-size: var(--s3); color: var(--muted); }
+.moments { list-style: none; padding: 0; margin: 6px 0 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.moments a {
+  display: inline-flex; gap: 8px; align-items: baseline; text-decoration: none; color: var(--ink);
+  border: 1px solid var(--line); background: var(--surface); padding: 6px 12px; border-radius: 999px; font-size: var(--s1);
+}
+.moments a:hover { border-color: var(--blue); }
+.moments b { font-family: var(--mono); color: var(--blue); font-weight: 600; }
+.moments .min { color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* Secciones */
+section { display: grid; gap: 18px; scroll-margin-top: 16px; }
+.sec-head { display: grid; gap: 4px; }
+.sec-head .eyebrow span { color: var(--muted); font-weight: 400; letter-spacing: 0.04em; }
+
+/* Hoja con pseudocódigo */
+.sheet {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 18px 22px;
+  font-family: var(--hand); font-size: 1.35rem; line-height: 1.5; white-space: pre; overflow-x: auto;
+  box-shadow: 0 1px 0 var(--line), 0 10px 24px -18px rgba(20, 33, 61, 0.45);
+  max-width: 420px; transform: rotate(-0.4deg);
+}
+.sheet-label { font-family: var(--body); font-size: var(--s1); color: var(--muted); display: block; margin-bottom: 6px; white-space: normal; }
+details.ask { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 16px; max-width: 65ch; }
+details.ask summary { font-weight: 700; cursor: pointer; }
+details.ask p { margin-top: 10px; }
+
+/* Escalera */
+.ladder { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 20px; align-items: start; }
+.rungs { display: grid; position: relative; padding-left: 26px; }
+.rungs::before { content: ""; position: absolute; left: 8px; top: 8px; bottom: 8px; width: 2px; background: linear-gradient(var(--blue), var(--muted)); }
+.axis { font-size: var(--s1); color: var(--muted); padding: 2px 0 8px; }
+.axis.bottom { padding: 8px 0 2px; }
+.group-label { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding: 10px 0 4px; }
+.rung {
+  display: flex; align-items: center; width: 100%; text-align: left; background: var(--surface); color: var(--ink);
+  border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; margin-bottom: 6px; position: relative;
+}
+.rung::before {
+  content: ""; position: absolute; left: -23px; top: 50%; width: 10px; height: 10px; margin-top: -5px;
+  border-radius: 50%; background: var(--paper); border: 2px solid var(--muted);
+}
+.rung[aria-pressed="true"] { border-color: var(--blue); box-shadow: inset 4px 0 0 var(--blue); }
+.rung[aria-pressed="true"]::before { background: var(--blue); border-color: var(--blue); }
+.level-card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: grid; gap: 12px; min-width: 0; }
+.level-card pre, pre.code-sample {
+  margin: 0; padding: 14px 16px; border-radius: 8px; background: var(--ed-bg); color: var(--ed-fg);
+  font-family: var(--mono); font-size: 0.92rem; line-height: 1.55; overflow-x: auto; white-space: pre;
+}
+.level-card pre.hand { font-family: var(--hand); font-size: 1.2rem; background: var(--paper); color: var(--ink); border: 1px dashed var(--line); }
+.badge { justify-self: start; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 10px; border-radius: 999px; background: var(--blue-soft); color: var(--blue); }
+.compare { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.compare div { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; }
+.compare h3 { font-size: var(--s2); margin-bottom: 4px; }
+.compare p { font-size: var(--s1); color: var(--muted); }
+
+/* Pasos */
+.steps { display: grid; gap: 22px; }
+.step { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px; display: grid; gap: 14px; min-width: 0; }
+.step-head { display: flex; gap: 14px; align-items: baseline; }
+.step-num {
+  font-family: var(--mono); font-weight: 600; font-size: var(--s1); color: var(--on-blue); background: var(--blue);
+  border-radius: 6px; padding: 2px 8px; flex: none; font-variant-numeric: tabular-nums;
+}
+.remember { display: flex; gap: 10px; align-items: baseline; font-size: var(--s1); background: var(--paper); border-radius: 8px; padding: 10px 12px; }
+.remember b { flex: none; color: var(--blue); }
+.todo { display: grid; gap: 4px; border-left: 4px solid var(--run); padding: 2px 0 2px 12px; }
+.todo .label { font-weight: 700; }
+.todo ol { display: grid; gap: 2px; }
+
+/* Guía de comandos */
+.guide-wrap { display: grid; gap: 8px; }
+.guide-wrap .label { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--blue); }
+.guide { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); }
+.guide-head, .guide-row {
+  display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.35fr) minmax(0, 0.8fr); gap: 12px; padding: 9px 12px; align-items: center;
+}
+.guide-head { background: var(--blue-soft); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--blue); }
+.guide-row + .guide-row { border-top: 1px solid var(--line); }
+.guide-row .cmd {
+  display: block; background: var(--ed-bg); color: var(--ed-fg); padding: 5px 9px; border-radius: 6px;
+  white-space: pre; overflow-x: auto; font-size: 0.88rem;
+}
+.guide-row .what { font-size: var(--s1); }
+.guide-row .shows {
+  font-family: var(--mono); font-size: 0.86rem; background: var(--paper); border: 1px dashed var(--line);
+  padding: 4px 8px; border-radius: 6px; white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.guide-row .shows.none { font-family: var(--body); font-style: italic; color: var(--muted); background: transparent; border-color: transparent; padding-left: 0; }
+
+/* Traducción */
+.trans { display: grid; gap: 10px; }
+.trans-row { display: grid; grid-template-columns: minmax(0, 0.8fr) 28px minmax(0, 1.3fr); gap: 10px; align-items: stretch; }
+.trans-row .ps, .trans-row .py { border-radius: 8px; padding: 10px 14px; overflow-x: auto; white-space: pre; }
+.trans-row .ps { font-family: var(--hand); font-size: 1.2rem; background: var(--paper); border: 1px solid var(--line); }
+.trans-row .py { font-family: var(--mono); font-size: 0.92rem; background: var(--ed-bg); color: var(--ed-fg); display: flex; align-items: center; }
+.trans-row .arrow { display: flex; align-items: center; justify-content: center; color: var(--blue); font-weight: 700; }
+.trans-head { display: grid; grid-template-columns: minmax(0, 0.8fr) 28px minmax(0, 1.3fr); gap: 10px; font-size: var(--s1); font-weight: 700; color: var(--muted); }
+.types { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.type { background: var(--paper); border-radius: 8px; padding: 10px 12px; display: grid; gap: 2px; }
+.type b { font-family: var(--mono); color: var(--blue); }
+.type span { font-size: var(--s1); color: var(--muted); }
+.callout { border-left: 4px solid var(--run); background: var(--paper); padding: 10px 14px; border-radius: 0 8px 8px 0; }
+
+/* Editor */
+.lab { display: grid; gap: 10px; min-width: 0; }
+.editor {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); background: var(--ed-bg); border-radius: 10px 10px 0 0;
+  border: 1px solid var(--ed-line); border-bottom: none; overflow: hidden;
+}
+.gutter {
+  font-family: var(--mono); font-size: 0.95rem; line-height: 1.6; color: var(--ed-muted); text-align: right;
+  padding: 12px 10px 12px 14px; user-select: none; white-space: pre; overflow: hidden; border-right: 1px solid var(--ed-line);
+  font-variant-numeric: tabular-nums;
+}
+.code {
+  font-family: var(--mono); font-size: 0.95rem; line-height: 1.6; color: var(--ed-fg); background: transparent;
+  border: none; resize: vertical; padding: 12px 14px; outline: none; tab-size: 4; white-space: pre;
+  overflow: auto; width: 100%; caret-color: var(--run);
+}
+.code:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--blue); }
+.toolbar {
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: center; background: var(--ed-bg);
+  border: 1px solid var(--ed-line); padding: 10px 12px; border-radius: 0 0 10px 10px; margin-top: -10px;
+}
+.btn { border-radius: 8px; padding: 8px 14px; font-weight: 700; border: 1px solid transparent; font-size: var(--s1); }
+.btn.run { background: var(--run); color: var(--run-ink); }
+.btn.ghost { background: transparent; color: var(--ed-fg); border-color: var(--ed-line); }
+.btn.ghost:hover { border-color: var(--ed-muted); }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.console {
+  background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; min-height: 64px;
+  font-family: var(--mono); font-size: 0.92rem; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.console .muted { color: var(--muted); }
+.console .typed { color: var(--blue); font-weight: 600; }
+.console input {
+  font: inherit; color: var(--blue); font-weight: 600; background: var(--blue-soft); border: none; border-bottom: 2px solid var(--blue);
+  padding: 0 6px; width: 9em; max-width: 100%; border-radius: 3px 3px 0 0; outline: none;
+}
+.err { display: block; margin-top: 8px; background: var(--bad-soft); border-radius: 8px; padding: 10px 12px; white-space: normal; font-family: var(--body); }
+.err .what { font-family: var(--mono); color: var(--bad); font-weight: 600; display: block; overflow-wrap: anywhere; }
+.err .hint { display: block; margin-top: 4px; }
+.err .hint b { color: var(--bad); }
+.result { border-radius: 10px; padding: 10px 14px; display: grid; gap: 4px; }
+.result.ok { background: var(--ok-soft); }
+.result.bad { background: var(--bad-soft); }
+.result strong { font-family: var(--display); font-size: var(--s3); }
+.result.ok strong { color: var(--ok); }
+.result.bad strong { color: var(--bad); }
+.fallback { background: var(--bad-soft); border-radius: 10px; padding: 12px 16px; display: grid; gap: 4px; }
+details.sol { border: 1px dashed var(--line); border-radius: 8px; padding: 10px 14px; }
+details.sol summary { cursor: pointer; font-size: var(--s1); color: var(--muted); font-weight: 700; }
+details.sol pre { margin-top: 10px; }
+
+/* Machete y errores */
+.machete { background: var(--surface); border: 2px solid var(--ink); border-radius: 12px; padding: 18px 20px; display: grid; gap: 12px; }
+.machete dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 8px 16px; margin: 0; }
+.machete dt { font-family: var(--mono); font-weight: 600; color: var(--blue); }
+.machete dd { margin: 0; }
+.errors { display: grid; gap: 10px; margin: 0; }
+.errors div { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.4fr); gap: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; }
+.errors dt { font-family: var(--mono); font-size: 0.85rem; color: var(--bad); font-weight: 600; overflow-wrap: anywhere; }
+.errors dd { margin: 0; font-size: var(--s1); }
+
+/* Guardar el trabajo */
+.save { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px; display: grid; gap: 18px; }
+.progress { list-style: none; padding: 0; display: grid; gap: 6px; }
+.progress li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.progress li:last-child { border-bottom: none; }
+.pill { flex: none; font-size: 0.75rem; font-weight: 700; padding: 2px 10px; border-radius: 999px; }
+.pill.done { background: var(--ok-soft); color: var(--ok); }
+.pill.todo { background: var(--paper); color: var(--muted); border: 1px solid var(--line); }
+.progress-total { font-weight: 700; }
+.field { display: grid; gap: 6px; }
+.field label { font-weight: 700; }
+.field input {
+  font: inherit; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper);
+  color: var(--ink); width: 100%; max-width: 440px;
+}
+.field input:focus-visible { outline: 3px solid var(--blue); outline-offset: 1px; }
+.save-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.save-actions .btn { padding: 10px 18px; font-size: var(--s2); }
+.save-msg { font-size: var(--s1); }
+.save-msg.ok { color: var(--ok); font-weight: 700; }
+.save-msg.bad { color: var(--bad); font-weight: 700; }
+footer { color: var(--muted); font-size: var(--s1); border-top: 1px solid var(--line); padding-top: 16px; }
+
+@media (max-width: 680px) {
+  .ladder, .types, .compare { grid-template-columns: minmax(0, 1fr); }
+  .trans-head { display: none; }
+  .trans-row { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .trans-row .arrow { transform: rotate(90deg); height: 18px; }
+  .errors div { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .machete dl { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .machete dd { margin-bottom: 8px; }
+  .guide-head { display: none; }
+  .guide-row { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .guide-row .shows::before { content: "En pantalla: "; font-family: var(--body); color: var(--muted); font-style: normal; }
+  .guide-row .shows.none::before { content: ""; }
+  .step, .save { padding: 16px; }
+  .wrap { gap: 44px; padding-block: 28px 48px; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <a class="back" href="../../../">← Todos los recursos</a>
+    <div class="eyebrow">1° EMS · Ciencias Computacionales y Tecnologías Digitales</div>
+    <h1>Del pseudocódigo a <span class="mark">Python</span></h1>
+    <p class="lead">El algoritmo del área que ya resolvieron en pseudocódigo hoy se convierte, paso a paso, en un programa que la computadora ejecuta de verdad.</p>
+    <ol class="moments" aria-label="Momentos de la clase">
+      <li><a href="#activacion"><b>1</b> Activación <span class="min">10 min</span></a></li>
+      <li><a href="#escalera"><b>2</b> Escalera de lenguajes <span class="min">10 min</span></a></li>
+      <li><a href="#pasos"><b>3</b> Paso a paso <span class="min">30 min</span></a></li>
+      <li><a href="#desafios"><b>4</b> Desafíos <span class="min">15 min</span></a></li>
+      <li><a href="#cierre"><b>5</b> Guardar el trabajo <span class="min">15 min</span></a></li>
+    </ol>
+  </header>
+
+  <section id="activacion" aria-labelledby="h-act">
+    <div class="sec-head">
+      <div class="eyebrow">Momento 1 <span>· 10 min</span></div>
+      <h2 id="h-act">¿La computadora entiende esto?</h2>
+    </div>
+    <p>Este es el pseudocódigo que escribimos para calcular el área de un rectángulo. Usa tres comandos: <code>input</code> recibe un dato, <code>=</code> guarda un valor y <code>output</code> muestra el resultado.</p>
+    <div class="sheet" aria-label="Pseudocódigo del área del rectángulo"><span class="sheet-label">Pseudocódigo · área del rectángulo</span>input base
+input altura
+area = base * altura
+output area</div>
+    <details class="ask">
+      <summary>¿Puede la computadora ejecutar esto tal cual?</summary>
+      <p>No. El pseudocódigo está pensado para personas: no tiene reglas estrictas y cada uno lo escribe un poco distinto. La computadora necesita un lenguaje con reglas exactas que se pueda traducir a instrucciones para el procesador. Por eso hoy pasamos a Python.</p>
+    </details>
+    <details class="ask">
+      <summary>¿Y los bloques de Code.org?</summary>
+      <p>Los bloques también son una forma de programar, pero por detrás se convierten en código escrito. Hoy vamos a escribir ese código nosotros mismos.</p>
+    </details>
+  </section>
+
+  <section id="escalera" aria-labelledby="h-esc">
+    <div class="sec-head">
+      <div class="eyebrow">Momento 2 <span>· 10 min</span></div>
+      <h2 id="h-esc">La escalera de los lenguajes</h2>
+    </div>
+    <p>La misma tarea, <strong>sumar 2 más 3 y mostrar el resultado</strong>, escrita en cinco niveles. Toquen cada escalón para verla.</p>
+    <div class="ladder">
+      <div>
+        <div class="axis">Más cerca de las personas</div>
+        <div class="rungs" id="rungs"></div>
+        <div class="axis bottom">Más cerca del procesador</div>
+      </div>
+      <div class="level-card" id="level-card" aria-live="polite"></div>
+    </div>
+    <div class="compare">
+      <div>
+        <h3>Alto nivel</h3>
+        <p>Se lee parecido a nuestro idioma, usa pocas líneas y funciona en distintas computadoras. Ejemplos: Python, JavaScript.</p>
+      </div>
+      <div>
+        <h3>Bajo nivel</h3>
+        <p>Da órdenes directas al procesador, necesita muchas líneas y depende del tipo de procesador. Ejemplos: ensamblador, código máquina.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="pasos" aria-labelledby="h-pas">
+    <div class="sec-head">
+      <div class="eyebrow">Momento 3 <span>· 30 min</span></div>
+      <h2 id="h-pas">Paso a paso: armamos el programa del área</h2>
+    </div>
+    <p>Cada paso agrega una pieza nueva. Primero lean la <strong>guía</strong>: muestra qué hace cada comando y qué aparece en pantalla. Después ejecuten el ejemplo y hagan lo que pide <strong>Tu turno</strong>. Con <strong>Comprobar</strong>, el recurso revisa si lo lograron.</p>
+    <div id="fallback" class="fallback" hidden>
+      <strong>El editor no pudo cargar Python.</strong>
+      <p>Necesita conexión a internet. Mientras tanto, copien el código en <a href="https://www.programiz.com/python-programming/online-compiler/" target="_blank" rel="noopener">el compilador en línea de Programiz</a> y ejecútenlo ahí.</p>
+    </div>
+    <div class="steps">
+
+      <article class="step" aria-labelledby="t-p1">
+        <div class="step-head"><span class="step-num">Paso 1</span><h3 id="t-p1">Mostrar mensajes con print()</h3></div>
+        <p><code>print()</code> muestra en pantalla lo que va entre paréntesis. Es el <code>output</code> del pseudocódigo.</p>
+        <div data-guide="p1"></div>
+        <div class="remember"><b>Ojo</b><span>Python distingue mayúsculas: se escribe <code>print</code>, no <code>Print</code>.</span></div>
+        <div class="todo"><span class="label">Prueben</span><ol><li>Ejecuten el ejemplo.</li><li><strong>Tu turno:</strong> agreguen una tercera línea que muestre su nombre.</li></ol></div>
+        <div class="lab" data-lab="p1"></div>
+      </article>
+
+      <article class="step" aria-labelledby="t-p2">
+        <div class="step-head"><span class="step-num">Paso 2</span><h3 id="t-p2">Guardar datos en variables</h3></div>
+        <p>Una variable es una caja con nombre donde se guarda un dato. El signo <code>=</code> guarda el valor de la derecha en la variable de la izquierda.</p>
+        <div data-guide="p2"></div>
+        <div class="remember"><b>Ojo</b><span>Los nombres de variables van sin espacios ni tildes: <code>area</code>, no <code>área</code>. Para unir palabras se usa guion bajo: <code>precio_total</code>.</span></div>
+        <div class="todo"><span class="label">Prueben</span><ol><li>Ejecuten el ejemplo.</li><li><strong>Tu turno:</strong> creen una variable <code>ciudad</code> con el nombre de su ciudad y muéstrenla con <code>print()</code>.</li></ol></div>
+        <div class="lab" data-lab="p2"></div>
+      </article>
+
+      <article class="step" aria-labelledby="t-p3">
+        <div class="step-head"><span class="step-num">Paso 3</span><h3 id="t-p3">Hacer cuentas</h3></div>
+        <p>Python calcula con operadores. El resultado se puede mostrar o guardar en una variable, igual que en el pseudocódigo.</p>
+        <div data-guide="p3"></div>
+        <div class="todo"><span class="label">Prueben</span><ol><li>Ejecuten el ejemplo: calcula el área de un rectángulo de 4 por 3.</li><li><strong>Tu turno:</strong> cambien la base por 5 y la altura por 2, y comprueben.</li></ol></div>
+        <div class="lab" data-lab="p3"></div>
+      </article>
+
+      <article class="step" aria-labelledby="t-p4">
+        <div class="step-head"><span class="step-num">Paso 4</span><h3 id="t-p4">Pedir datos con input()</h3></div>
+        <p><code>input()</code> detiene el programa y espera que la persona escriba algo. Es el <code>input</code> del pseudocódigo.</p>
+        <div data-guide="p4"></div>
+        <div class="remember"><b>Cómo se usa</b><span>Cuando aparezca el recuadro en la consola, escriban el dato y presionen Enter.</span></div>
+        <div class="todo"><span class="label">Prueben</span><ol><li>Ejecuten el ejemplo y escriban su nombre.</li><li><strong>Tu turno:</strong> agreguen una pregunta por la ciudad donde viven y muestren la respuesta.</li></ol></div>
+        <div class="lab" data-lab="p4"></div>
+      </article>
+
+      <article class="step" aria-labelledby="t-p5">
+        <div class="step-head"><span class="step-num">Paso 5</span><h3 id="t-p5">Cuidado: input() devuelve texto</h3></div>
+        <p>Todo lo que llega por <code>input()</code> es texto, aunque escriban un número. Para hacer cuentas hay que convertirlo.</p>
+        <div class="types">
+          <div class="type"><b>int</b><span>Números enteros</span><code>7 · -3 · 2026</code></div>
+          <div class="type"><b>float</b><span>Números con decimales</span><code>2.5 · 3.14</code></div>
+          <div class="type"><b>str</b><span>Texto, entre comillas</span><code>"hola" · "15"</code></div>
+        </div>
+        <div data-guide="p5"></div>
+        <div class="todo"><span class="label">Prueben</span><ol><li>Ejecuten el ejemplo y escriban 15. En vez de 30 aparece 1515.</li><li><strong>Tu turno:</strong> cambien la primera línea por <code>edad = int(input("Edad: "))</code> y comprueben.</li></ol></div>
+        <div class="lab" data-lab="p5"></div>
+      </article>
+
+      <article class="step" aria-labelledby="t-p6">
+        <div class="step-head"><span class="step-num">Paso 6</span><h3 id="t-p6">El programa completo</h3></div>
+        <p>Ya tienen todas las piezas. Así queda el pseudocódigo del área traducido a Python, línea por línea:</p>
+        <div class="trans">
+          <div class="trans-head"><span>Pseudocódigo</span><span></span><span>Python</span></div>
+          <div class="trans-row"><div class="ps">input base</div><div class="arrow" aria-hidden="true">→</div><div class="py">base = float(input("Base: "))</div></div>
+          <div class="trans-row"><div class="ps">input altura</div><div class="arrow" aria-hidden="true">→</div><div class="py">altura = float(input("Altura: "))</div></div>
+          <div class="trans-row"><div class="ps">area = base * altura</div><div class="arrow" aria-hidden="true">→</div><div class="py">area = base * altura</div></div>
+          <div class="trans-row"><div class="ps">output area</div><div class="arrow" aria-hidden="true">→</div><div class="py">print("El área es", area)</div></div>
+        </div>
+        <div data-guide="p6"></div>
+        <p class="callout">En Python los decimales se escriben con <strong>punto</strong>: <code>2.5</code>, no <code>2,5</code>.</p>
+        <div class="todo"><span class="label">Prueben</span><ol><li>Ejecuten el programa con base 4 y altura 2.5, y comprueben.</li><li>Ejecútenlo otra vez y escriban <code>2,5</code> con coma. Lean el error y la pista.</li></ol></div>
+        <div class="lab" data-lab="p6"></div>
+      </article>
+    </div>
+
+    <div class="machete">
+      <div class="eyebrow">Machete de la clase</div>
+      <dl>
+        <dt>print("Hola")</dt><dd>Muestra un mensaje o un resultado en pantalla.</dd>
+        <dt>nombre = "Ana"</dt><dd>Guarda un dato en una variable.</dd>
+        <dt>input("Base: ")</dt><dd>Pide un dato y lo devuelve como texto.</dd>
+        <dt>int() · float()</dt><dd>Convierten texto en número entero o con decimales.</dd>
+        <dt>+ - * /</dt><dd>Suma, resta, multiplicación y división.</dd>
+        <dt>2.5</dt><dd>Los decimales llevan punto, no coma.</dd>
+      </dl>
+    </div>
+  </section>
+
+  <section id="desafios" aria-labelledby="h-des">
+    <div class="sec-head">
+      <div class="eyebrow">Momento 4 <span>· 15 min</span></div>
+      <h2 id="h-des">Desafíos</h2>
+    </div>
+    <p>Lean la guía de cada desafío y completen los espacios marcados con <code>___</code>. Si terminan, sigan con el desafío extra.</p>
+    <div class="steps">
+      <article class="step" aria-labelledby="t-d1">
+        <div class="step-head"><span class="step-num">Desafío 1</span><h3 id="t-d1">Área del cuadrado</h3></div>
+        <p>Pidan el lado y muestren el área. Fórmula: lado × lado.</p>
+        <div data-guide="d1"></div>
+        <div class="lab" data-lab="d1"></div>
+      </article>
+      <article class="step" aria-labelledby="t-d2">
+        <div class="step-head"><span class="step-num">Desafío 2</span><h3 id="t-d2">Área del triángulo</h3></div>
+        <p>Pidan la base y la altura, y muestren el área. Fórmula: base × altura ÷ 2.</p>
+        <div data-guide="d2"></div>
+        <div class="lab" data-lab="d2"></div>
+      </article>
+      <article class="step" aria-labelledby="t-d3">
+        <div class="step-head"><span class="step-num">Extra</span><h3 id="t-d3">Perímetro del rectángulo</h3></div>
+        <p>Esta vez escriben el programa completo. Pidan la base y la altura, y muestren el perímetro. Fórmula: 2 × base + 2 × altura.</p>
+        <div data-guide="d3"></div>
+        <div class="lab" data-lab="d3"></div>
+      </article>
+    </div>
+
+    <h3>Guía de errores frecuentes</h3>
+    <dl class="errors">
+      <div><dt>NameError: name '___' is not defined</dt><dd>Todavía queda un espacio <code>___</code> sin completar.</dd></div>
+      <div><dt>NameError: name '…' is not defined</dt><dd>Python no conoce ese nombre. Revisen cómo está escrito, con mayúsculas incluidas, y que la variable tenga un valor antes de usarla.</dd></div>
+      <div><dt>TypeError: can't multiply sequence by non-int of type 'str'</dt><dd>Están multiplicando textos. Conviertan el dato de <code>input()</code> con <code>float()</code> o <code>int()</code>.</dd></div>
+      <div><dt>ValueError: could not convert string to float</dt><dd>El dato no es un número. Si tiene decimales, escríbanlo con punto: <code>2.5</code>.</dd></div>
+      <div><dt>SyntaxError</dt><dd>Hay un error de escritura en esa línea o en la anterior: un paréntesis o unas comillas sin cerrar, o espacios al comienzo de la línea.</dd></div>
+    </dl>
+  </section>
+
+  <section id="cierre" aria-labelledby="h-cie">
+    <div class="sec-head">
+      <div class="eyebrow">Momento 5 <span>· 15 min</span></div>
+      <h2 id="h-cie">Guardar el trabajo</h2>
+    </div>
+    <p>Escriban su nombre y guarden un PDF con el código de cada paso y desafío, el resultado de la última ejecución y cuáles comprobaron.</p>
+    <div class="save">
+      <div>
+        <ul class="progress" id="progress" aria-label="Avance de la clase"></ul>
+      </div>
+      <p class="progress-total" id="progress-total" aria-live="polite"></p>
+      <div class="field">
+        <label for="student-name">Nombre y apellido</label>
+        <input id="student-name" type="text" autocomplete="name" placeholder="Ej.: Sofía Pereira">
+      </div>
+      <div class="save-actions">
+        <button class="btn run" id="btn-pdf" type="button">Guardar en PDF</button>
+        <span class="save-msg" id="save-msg" aria-live="polite"></span>
+      </div>
+    </div>
+  </section>
+
+  <footer>Prof. Pablo Montaña ·El código que escriban queda guardado solo en este navegador hasta que lo guarden en PDF.</footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt-stdlib.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script>
+/*PDF-START*/
+function buildPdf(JsPDF, info) {
+  var MAP = { "→": "->", "—": "-", "–": "-", "…": "...", "“": "\"", "”": "\"", "‘": "'", "’": "'", " ": " ", "\t": "    " };
+  function clean(s) {
+    return String(s == null ? "" : s).replace(/[→—–…“”‘’ \t]/g, function (c) { return MAP[c]; })
+      .replace(/[^\n -ÿ]/g, "?");
+  }
+  var doc = new JsPDF({ unit: "mm", format: "a4" });
+  var L = 18, W = 174, BOTTOM = 280, y = 20;
+  function ensure(h) { if (y + h > BOTTOM) { doc.addPage(); y = 20; } }
+  function para(text, size, style, color, gap) {
+    doc.setFont("helvetica", style || "normal"); doc.setFontSize(size); doc.setTextColor.apply(doc, color || [21, 33, 59]);
+    var lines = doc.splitTextToSize(clean(text), W);
+    var lh = size * 0.42;
+    lines.forEach(function (ln) { ensure(lh); doc.text(ln, L, y); y += lh; });
+    y += gap || 0;
+  }
+  function codeBlock(text, fill, maxLines) {
+    doc.setFont("courier", "normal"); doc.setFontSize(9);
+    var raw = clean(text).replace(/\s+$/, "").split("\n");
+    var lines = [];
+    raw.forEach(function (r) { var parts = doc.splitTextToSize(r === "" ? " " : r, W - 6); lines = lines.concat(parts); });
+    if (maxLines && lines.length > maxLines) { lines = lines.slice(0, maxLines); lines.push("..."); }
+    var lh = 4.2;
+    y += 1;
+    lines.forEach(function (ln, i) {
+      ensure(lh);
+      doc.setFillColor.apply(doc, fill);
+      doc.rect(L, y - 3.2 - (i === 0 ? 1.2 : 0), W, lh + (i === 0 ? 1.2 : 0) + (i === lines.length - 1 ? 1.2 : 0), "F");
+      doc.setTextColor(21, 33, 59);
+      doc.text(ln, L + 3, y);
+      y += lh;
+    });
+    y += 3;
+  }
+
+  para(info.title, 18, "bold", [36, 83, 166], 2);
+  para(info.course, 10, "normal", [85, 98, 125], 3);
+  para("Nombre: " + info.name, 12, "bold", null, 1);
+  para("Fecha: " + info.date, 10, "normal", null, 1);
+  para("Comprobados: " + info.doneCount + " de " + info.items.length, 10, "normal", null, 4);
+  doc.setDrawColor(213, 220, 235); doc.line(L, y, L + W, y); y += 7;
+
+  info.items.forEach(function (it) {
+    ensure(18);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(12); doc.setTextColor(21, 33, 59);
+    doc.text(clean(it.title), L, y);
+    doc.setFontSize(9);
+    if (it.done) doc.setTextColor(29, 122, 75); else doc.setTextColor(85, 98, 125);
+    doc.text(it.done ? "Comprobado" : "Sin comprobar", L + W, y, { align: "right" });
+    y += 5;
+    para("Código", 8.5, "bold", [85, 98, 125], 0);
+    codeBlock(it.code, [238, 242, 250]);
+    if (it.output) {
+      para("Última ejecución", 8.5, "bold", [85, 98, 125], 0);
+      codeBlock(it.output, [250, 250, 245], 14);
+    }
+    y += 3;
+  });
+
+  var n = doc.internal.getNumberOfPages();
+  for (var p = 1; p <= n; p++) {
+    doc.setPage(p);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(85, 98, 125);
+    doc.text(clean(info.title + " · " + info.name), L, 290);
+    doc.text("Página " + p + " de " + n, L + W, 290, { align: "right" });
+  }
+  return doc;
+}
+/*PDF-END*/
+
+(function () {
+  "use strict";
+
+  /* ---------- Escalera de lenguajes ---------- */
+  var LEVELS = [
+    { id: "humano", name: "Lenguaje humano", group: "Para personas", hand: true,
+      code: "Sumar 2 más 3 y mostrar el resultado.",
+      text: "Lo entendemos las personas, pero puede ser ambiguo. La computadora no puede ejecutarlo." },
+    { id: "pseudo", name: "Pseudocódigo", group: "Para personas", hand: true,
+      code: "resultado = 2 + 3\noutput resultado",
+      text: "Ordena la lógica paso a paso, pero no tiene reglas estrictas. Sirve para pensar el algoritmo antes de programar." },
+    { id: "python", name: "Python", group: "Alto nivel",
+      code: "resultado = 2 + 3\nprint(resultado)",
+      text: "Tiene reglas exactas y se lee casi como inglés. Un programa llamado intérprete lo traduce a instrucciones para el procesador." },
+    { id: "asm", name: "Ensamblador", group: "Bajo nivel",
+      code: "mov eax, 2            ; poner 2 en el registro eax\nadd eax, 3            ; sumarle 3\nmov [resultado], eax  ; guardarlo en memoria\n; mostrarlo en pantalla lleva muchas instrucciones más",
+      text: "Cada línea es una orden directa al procesador. Cambia según el tipo de procesador, y solo sumar ya lleva tres líneas." },
+    { id: "maquina", name: "Código máquina", group: "Bajo nivel",
+      code: "10111000 00000010 00000000 00000000 00000000\n10000011 11000000 00000011\n10100011 + 4 bytes con la dirección de memoria\n… y cientos de bytes más para mostrar el resultado",
+      text: "Es lo único que el procesador ejecuta: unos y ceros. Para una persona es casi imposible de leer." }
+  ];
+  var rungs = document.getElementById("rungs");
+  var levelCard = document.getElementById("level-card");
+  var lastGroup = "";
+  LEVELS.forEach(function (lv) {
+    if (lv.group !== lastGroup) {
+      rungs.appendChild(el("div", "group-label", lv.group));
+      lastGroup = lv.group;
+    }
+    var b = el("button", "rung", lv.name);
+    b.type = "button"; b.id = "rung-" + lv.id;
+    b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { showLevel(lv.id); });
+    rungs.appendChild(b);
+  });
+  function showLevel(id) {
+    var lv = LEVELS.filter(function (l) { return l.id === id; })[0];
+    LEVELS.forEach(function (l) { document.getElementById("rung-" + l.id).setAttribute("aria-pressed", String(l.id === id)); });
+    levelCard.innerHTML = "";
+    levelCard.appendChild(el("span", "badge", lv.group));
+    levelCard.appendChild(el("h3", null, lv.name));
+    var pre = el("pre", lv.hand ? "hand" : null, lv.code);
+    levelCard.appendChild(pre);
+    levelCard.appendChild(el("p", null, lv.text));
+  }
+
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+  showLevel("python");
+
+  /* ---------- Guías: qué hace cada comando ---------- */
+  var NONE = null; // no muestra nada en pantalla
+  var GUIDES = {
+    p1: [
+      ['print("Hola")', "Muestra el texto que va entre comillas.", "Hola"],
+      ['print("Hola", "Ana")', "Muestra varios datos separados por coma. En pantalla quedan separados por un espacio.", "Hola Ana"],
+      ["print(2 + 3)", "Sin comillas, Python primero calcula y después muestra el resultado.", "5"],
+      ['print("2 + 3")', "Con comillas es texto: lo muestra tal cual, sin calcular.", "2 + 3"]
+    ],
+    p2: [
+      ['nombre = "Sofía"', "Guarda el texto Sofía en la variable nombre.", NONE],
+      ["edad = 15", "Guarda el número 15 en la variable edad. Los números van sin comillas.", NONE],
+      ["print(nombre)", "Muestra lo que está guardado en la variable.", "Sofía"],
+      ['print("nombre")', "Con comillas muestra la palabra nombre, no lo que guarda la variable.", "nombre"],
+      ['print(nombre, "tiene", edad)', "Combina variables y texto en una misma línea.", "Sofía tiene 15"]
+    ],
+    p3: [
+      ["print(7 + 2)", "Suma.", "9"],
+      ["print(7 - 2)", "Resta.", "5"],
+      ["print(7 * 2)", "Multiplica. En Python se usa el asterisco, no la x.", "14"],
+      ["print(7 / 2)", "Divide. El resultado siempre tiene decimales.", "3.5"],
+      ["area = 4 * 3", "Calcula 4 por 3 y guarda el resultado en area.", NONE],
+      ['print("El área es", area)', "Muestra un texto y el valor de la variable.", "El área es 12"]
+    ],
+    p4: [
+      ['input("Nombre: ")', "Muestra el mensaje y espera que la persona escriba y presione Enter.", "Nombre: _"],
+      ['nombre = input("Nombre: ")', "Pide el dato y guarda lo que escribió la persona en nombre.", "Nombre: Ana"],
+      ['print("Hola,", nombre)', "Muestra el saludo con el dato que se guardó.", "Hola, Ana"]
+    ],
+    p5: [
+      ['"15" * 2', "Con texto, el asterisco repite: pega el texto dos veces.", "1515"],
+      ['int("15")', "Convierte el texto en un número entero.", "15"],
+      ['float("2.5")', "Convierte el texto en un número con decimales.", "2.5"],
+      ['int("15") * 2', "Ahora es un número, así que multiplica de verdad.", "30"],
+      ['int(input("Edad: "))', "Pide el dato y en el mismo paso lo convierte en entero.", "Edad: 15"]
+    ],
+    p6: [
+      ['float(input("Base: "))', "Pide la base y la convierte en número con decimales.", "Base: 4"],
+      ["area = base * altura", "Multiplica los dos datos y guarda el resultado.", NONE],
+      ['print("El área es", area)', "Muestra el resultado. Con float() aparece con decimal.", "El área es 10.0"]
+    ],
+    d1: [
+      ['float(input("Lado: "))', "Pide el lado y lo convierte en número.", "Lado: 5"],
+      ["lado * lado", "Multiplica el lado por sí mismo. Con lado 5 da 25.0.", NONE],
+      ['print("El área es", area)', "Muestra el resultado guardado en area.", "El área es 25.0"]
+    ],
+    d2: [
+      ['float(input("Altura: "))', "Pide la altura y la convierte en número.", "Altura: 5"],
+      ["base * altura / 2", "Multiplica la base por la altura y divide entre 2. Con 6 y 5 da 15.0.", NONE],
+      ['print("El área es", area)', "Muestra el resultado guardado en area.", "El área es 15.0"]
+    ],
+    d3: [
+      ["2 * base", "Multiplica la base por 2. Con base 4 da 8.0.", NONE],
+      ["2 * base + 2 * altura", "Python hace primero las multiplicaciones y después la suma. Con 4 y 2.5 da 13.0.", NONE],
+      ['print("El perímetro es", perimetro)', "Muestra el resultado guardado en perimetro.", "El perímetro es 13.0"]
+    ]
+  };
+  Array.prototype.forEach.call(document.querySelectorAll("[data-guide]"), function (root) {
+    var rows = GUIDES[root.getAttribute("data-guide")];
+    root.className = "guide-wrap";
+    root.appendChild(el("div", "label", "Guía: qué hace cada comando"));
+    var g = el("div", "guide");
+    g.setAttribute("role", "table");
+    var head = el("div", "guide-head");
+    head.setAttribute("role", "row");
+    ["Escriben", "Qué hace", "En pantalla"].forEach(function (h) { var c = el("span", null, h); c.setAttribute("role", "columnheader"); head.appendChild(c); });
+    g.appendChild(head);
+    rows.forEach(function (r) {
+      var row = el("div", "guide-row"); row.setAttribute("role", "row");
+      var c1 = el("code", "cmd", r[0]); c1.setAttribute("role", "cell");
+      var c2 = el("span", "what", r[1]); c2.setAttribute("role", "cell");
+      var c3 = r[2] === null ? el("span", "shows none", "No muestra nada") : el("span", "shows", r[2]);
+      c3.setAttribute("role", "cell");
+      row.appendChild(c1); row.appendChild(c2); row.appendChild(c3);
+      g.appendChild(row);
+    });
+    root.appendChild(g);
+  });
+
+  /* ---------- Ejercicios ---------- */
+  var LABS = {
+    p1: { title: "Paso 1 · Mostrar mensajes con print()",
+          starter: 'print("Hola, 1° EMS")\nprint("Hoy programamos en Python")\n',
+          test: { minLines: 3, label: "",
+                  ok: "El programa muestra tres líneas o más.",
+                  fail: "Todavía no aparecen tres líneas. Agreguen otro print() con su nombre." } },
+    p2: { title: "Paso 2 · Guardar datos en variables",
+          starter: 'nombre = "Sofía"\nedad = 15\nprint(nombre, "tiene", edad, "años")\n',
+          test: { needCode: /ciudad\s*=/, needCodePrint: /print\s*\([^)]*ciudad/, label: "",
+                  ok: "Crearon la variable ciudad y la mostraron.",
+                  fail: "Falta crear la variable ciudad (ciudad = \"...\") o mostrarla con print(ciudad)." } },
+    p3: { title: "Paso 3 · Hacer cuentas",
+          starter: 'base = 4\naltura = 3\narea = base * altura\nprint("El área es", area)\n',
+          test: { inputs: [], expect: [10], label: "",
+                  ok: "Con base 5 y altura 2 el área es 10.",
+                  fail: "Esperábamos ver 10 en pantalla. Revisen que cambiaron base = 5 y altura = 2." } },
+    p4: { title: "Paso 4 · Pedir datos con input()",
+          starter: 'nombre = input("¿Cuál es tu nombre? ")\nprint("Hola,", nombre)\n',
+          test: { inputs: ["Ana", "Artigas"], expectText: ["Artigas"], label: "los datos Ana y Artigas",
+                  ok: "El programa pide dos datos y muestra la ciudad.",
+                  fail: "El programa tiene que pedir el nombre, después la ciudad, y mostrar la ciudad con print()." } },
+    p5: { title: "Paso 5 · Cuidado: input() devuelve texto",
+          starter: 'edad = input("Edad: ")\nprint("El doble de tu edad es", edad * 2)\n',
+          test: { inputs: ["15"], expect: [30], label: "la edad 15",
+                  ok: "Ahora sí: el doble de 15 es 30.",
+                  fail: "Todavía no aparece 30. Conviertan la edad con int(input(\"Edad: \"))." } },
+    p6: { title: "Paso 6 · El programa completo",
+          starter: '# Área del rectángulo\nbase = float(input("Base: "))\naltura = float(input("Altura: "))\narea = base * altura\nprint("El área es", area)\n',
+          test: { inputs: ["4", "2.5"], expect: [10], label: "base 4 y altura 2.5",
+                  ok: "Con base 4 y altura 2.5 el área es 10.",
+                  fail: "Esperábamos ver 10 en pantalla. Revisen la fórmula y el print()." } },
+    d1: { title: "Desafío 1 · Área del cuadrado",
+          starter: '# Área del cuadrado\nlado = float(input("Lado: "))\narea = ___\nprint("El área del cuadrado es", ___)\n',
+          solution: 'lado = float(input("Lado: "))\narea = lado * lado\nprint("El área del cuadrado es", area)\n',
+          test: { inputs: ["5"], expect: [25], label: "lado 5",
+                  ok: "Con lado 5 el área es 25.",
+                  fail: "Esperábamos ver 25 en pantalla. Revisen la fórmula: lado * lado." } },
+    d2: { title: "Desafío 2 · Área del triángulo",
+          starter: '# Área del triángulo\nbase = float(input("Base: "))\naltura = ___\narea = ___\nprint("El área del triángulo es", area)\n',
+          solution: 'base = float(input("Base: "))\naltura = float(input("Altura: "))\narea = base * altura / 2\nprint("El área del triángulo es", area)\n',
+          test: { inputs: ["6", "5"], expect: [15], label: "base 6 y altura 5",
+                  ok: "Con base 6 y altura 5 el área es 15.",
+                  fail: "Esperábamos ver 15 en pantalla. Recuerden pedir la altura con float(input(...)) y dividir entre 2." } },
+    d3: { title: "Extra · Perímetro del rectángulo",
+          starter: '# Perímetro del rectángulo\n# 1. Pedir la base\n\n# 2. Pedir la altura\n\n# 3. Calcular el perímetro\n\n# 4. Mostrar el resultado\n',
+          solution: 'base = float(input("Base: "))\naltura = float(input("Altura: "))\nperimetro = 2 * base + 2 * altura\nprint("El perímetro es", perimetro)\n',
+          test: { inputs: ["4", "2.5"], expect: [13], label: "base 4 y altura 2.5",
+                  ok: "Con base 4 y altura 2.5 el perímetro es 13.",
+                  fail: "Esperábamos ver 13 en pantalla. Revisen la fórmula: 2 * base + 2 * altura." } }
+  };
+  var ORDER = ["p1", "p2", "p3", "p4", "p5", "p6", "d1", "d2", "d3"];
+
+  var store = {
+    get: function (k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } },
+    set: function (k, v) { try { window.localStorage.setItem(k, v); } catch (e) {} }
+  };
+  var KEY = "clase1-python-v2:";
+
+  var ready = typeof window.Sk !== "undefined";
+  if (ready) { try { new Function("return 1")(); } catch (e) { ready = false; } }
+  if (!ready) document.getElementById("fallback").hidden = false;
+
+  var busy = false;
+  var stopRequested = false;
+  var labs = {};
+
+  function hintFor(name, msg) {
+    msg = msg || "";
+    if (name === "NameError" && /name '_+'/.test(msg))
+      return "Todavía queda un espacio ___ sin completar. Reemplácenlo por lo que corresponde.";
+    if (name === "TypeError" && /sequence|unsupported operand|concatenate|must be str|can't multiply/.test(msg))
+      return "Están haciendo cuentas con texto. input() siempre devuelve texto: conviértanlo con float() o int().";
+    if (name === "ValueError" && /convert string to float/.test(msg))
+      return "El dato ingresado no es un número. Si tiene decimales, escríbanlo con punto: 2.5 (no 2,5).";
+    if (name === "ValueError" && /invalid literal for int/.test(msg))
+      return "int() solo acepta números enteros. Si el dato puede tener decimales, usen float().";
+    if (name === "NameError") {
+      var m = /name '([^']+)'/.exec(msg);
+      var who = m ? "«" + m[1] + "»" : "ese nombre";
+      return "Python no conoce " + who + ". Revisen cómo está escrito, con mayúsculas incluidas (print, no Print), y que la variable tenga un valor antes de usarla.";
+    }
+    if (name === "SyntaxError" && /EOF/.test(msg)) return "Falta cerrar algo: un paréntesis o unas comillas.";
+    if (name === "SyntaxError" || name === "IndentationError")
+      return "Hay un error de escritura en esa línea o en la anterior. Revisen paréntesis, comillas y que no haya espacios al comienzo de la línea.";
+    if (name === "ZeroDivisionError") return "Están dividiendo entre cero. Revisen los datos o la fórmula.";
+    return "Lean el mensaje: indica el tipo de error y la línea donde ocurrió.";
+  }
+
+  function describeError(e) {
+    var name = (e && e.tp$name) || "Error";
+    var full = e && e.toString ? e.toString() : String(e);
+    var msg = full.replace(/^[A-Za-z]+:\s*/, "");
+    var line = null;
+    if (e && e.traceback && e.traceback.length && e.traceback[0].lineno) line = e.traceback[0].lineno;
+    var m = / on line (\d+)/.exec(msg);
+    if (!line && m) line = Number(m[1]);
+    msg = msg.replace(/ on line \d+$/, "");
+    return { name: name, msg: msg, line: line, hint: hintFor(name, msg) };
+  }
+
+  function execute(code, inputFn, outputFn) {
+    stopRequested = false;
+    Sk.configure({
+      output: outputFn,
+      read: function (f) {
+        if (Sk.builtinFiles === undefined || Sk.builtinFiles.files[f] === undefined) throw "No se encontró el archivo: '" + f + "'";
+        return Sk.builtinFiles.files[f];
+      },
+      inputfun: inputFn,
+      inputfunTakesPrompt: true,
+      __future__: Sk.python3,
+      yieldLimit: 100,
+      killableWhile: true,
+      killableFor: true,
+      execLimit: null
+    });
+    return Sk.misceval.asyncToPromise(function () {
+      return Sk.importMainWithBody("<stdin>", false, code, true);
+    }, { "*": function () { if (stopRequested) { var err = new Error("Programa detenido"); err.tp$name = "Detenido"; throw err; } } });
+  }
+
+  function setBusy(on) {
+    busy = on;
+    ORDER.forEach(function (id) { if (labs[id]) labs[id].refresh(); });
+  }
+
+  function numbersIn(text) {
+    return (text.match(/-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/g) || []).map(Number);
+  }
+
+  function createLab(root, id, cfg) {
+    var saved = store.get(KEY + id);
+    var editor = el("div", "editor");
+    var gutter = el("div", "gutter"); gutter.setAttribute("aria-hidden", "true");
+    var code = el("textarea", "code");
+    code.id = "code-" + id;
+    code.spellcheck = false;
+    code.setAttribute("autocomplete", "off"); code.setAttribute("autocapitalize", "off"); code.setAttribute("autocorrect", "off");
+    code.setAttribute("aria-label", "Código en Python: " + cfg.title);
+    code.value = saved !== null ? saved : cfg.starter;
+    editor.appendChild(gutter); editor.appendChild(code);
+
+    var toolbar = el("div", "toolbar");
+    var btnRun = el("button", "btn run", "Ejecutar"); btnRun.type = "button";
+    var btnCheck = el("button", "btn ghost", "Comprobar"); btnCheck.type = "button";
+    var btnStop = el("button", "btn ghost", "Detener"); btnStop.type = "button"; btnStop.hidden = true;
+    var btnReset = el("button", "btn ghost", "Volver al código inicial"); btnReset.type = "button";
+    toolbar.appendChild(btnRun); toolbar.appendChild(btnCheck); toolbar.appendChild(btnStop); toolbar.appendChild(btnReset);
+
+    var cons = el("div", "console"); cons.setAttribute("aria-live", "polite");
+    var result = el("div", "result"); result.hidden = true;
+    root.appendChild(editor); root.appendChild(toolbar); root.appendChild(cons); root.appendChild(result);
+
+    if (cfg.solution) {
+      var sol = el("details", "sol");
+      sol.appendChild(el("summary", null, "Ver una solución posible (para revisar al final)"));
+      sol.appendChild(el("pre", "code-sample", cfg.solution));
+      root.appendChild(sol);
+    }
+
+    var mine = false;
+    var pendingInput = null;
+    var lastOutput = store.get(KEY + "out:" + id) || "";
+
+    function rows() {
+      var n = code.value.split("\n").length;
+      var s = "";
+      for (var i = 1; i <= n; i++) s += i + (i < n ? "\n" : "");
+      gutter.textContent = s;
+      gutter.scrollTop = code.scrollTop;
+    }
+    code.rows = Math.max(4, cfg.starter.split("\n").length);
+    rows();
+
+    function clearConsole(hint) {
+      cons.innerHTML = "";
+      if (hint) cons.appendChild(el("span", "muted", "La salida del programa aparece acá."));
+    }
+    clearConsole(true);
+    function write(text, cls) { cons.appendChild(el("span", cls, text)); }
+    function showError(info) {
+      var box = el("span", "err");
+      box.appendChild(el("span", "what", (info.line ? "Línea " + info.line + " · " : "") + info.name + ": " + info.msg));
+      var hint = el("span", "hint");
+      hint.appendChild(el("b", null, "Pista: "));
+      hint.appendChild(document.createTextNode(info.hint));
+      box.appendChild(hint);
+      cons.appendChild(box);
+    }
+    function showResult(ok, title, text) {
+      result.className = "result " + (ok ? "ok" : "bad");
+      result.innerHTML = "";
+      result.appendChild(el("strong", null, title));
+      result.appendChild(el("p", null, text));
+      result.hidden = false;
+    }
+    function remember(out) {
+      lastOutput = out;
+      store.set(KEY + "out:" + id, out);
+    }
+
+    var saveTimer = null;
+    code.addEventListener("input", function () {
+      rows();
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(function () { store.set(KEY + id, code.value); }, 300);
+    });
+    code.addEventListener("scroll", function () { gutter.scrollTop = code.scrollTop; });
+    code.addEventListener("keydown", function (e) {
+      if (e.key === "Tab" && !e.shiftKey) {
+        e.preventDefault();
+        var s = code.selectionStart, en = code.selectionEnd;
+        code.value = code.value.slice(0, s) + "    " + code.value.slice(en);
+        code.selectionStart = code.selectionEnd = s + 4;
+        code.dispatchEvent(new Event("input"));
+      } else if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        run();
+      }
+    });
+
+    function run() {
+      if (!ready || busy) return;
+      result.hidden = true;
+      clearConsole(false);
+      var transcript = "";
+      mine = true; setBusy(true);
+      execute(code.value, function (prompt) {
+        return new Promise(function (resolve, reject) {
+          write(String(prompt || ""));
+          transcript += String(prompt || "");
+          var inp = el("input");
+          inp.type = "text";
+          inp.id = "in-" + id;
+          inp.autocomplete = "off";
+          inp.setAttribute("aria-label", prompt ? "Dato: " + prompt : "Dato para el programa");
+          cons.appendChild(inp);
+          inp.focus();
+          pendingInput = { el: inp, reject: reject };
+          inp.addEventListener("keydown", function (e) {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              var v = inp.value;
+              inp.replaceWith(el("span", "typed", v + "\n"));
+              transcript += v + "\n";
+              pendingInput = null;
+              resolve(v);
+            }
+          });
+        });
+      }, function (text) { write(text); transcript += text; })
+        .then(function () { write("\n— Fin del programa —", "muted"); remember(transcript); })
+        .catch(function (e) {
+          if (stopRequested) { write("\n— Programa detenido —", "muted"); return; }
+          var info = describeError(e);
+          showError(info);
+          remember(transcript + (transcript && !/\n$/.test(transcript) ? "\n" : "") + info.name + ": " + info.msg);
+        })
+        .then(function () { mine = false; setBusy(false); });
+    }
+
+    function check() {
+      if (!ready || busy) return;
+      var t = cfg.test;
+      var inputs = t.inputs || [];
+      var i = 0, extra = false, transcript = "", printed = "";
+      var datos = function (n) { return n + " dato" + (n > 1 ? "s" : ""); };
+      clearConsole(false);
+      write((t.label ? "Comprobando con " + t.label : "Comprobando") + "…\n", "muted");
+      mine = true; setBusy(true);
+      execute(code.value, function (prompt) {
+        transcript += String(prompt || "");
+        if (i < inputs.length) { var v = inputs[i++]; transcript += v + "\n"; return Promise.resolve(v); }
+        extra = true;
+        return Promise.resolve("0");
+      }, function (text) { transcript += text; printed += text; })
+        .then(function () {
+          write(transcript);
+          remember(transcript);
+          var ok = true;
+          if (t.expect) {
+            var nums = numbersIn(printed);
+            var tol = t.tol || 0.01;
+            ok = t.expect.every(function (x) { return nums.some(function (n) { return Math.abs(n - x) <= tol; }); });
+          }
+          if (t.expectText) ok = ok && t.expectText.every(function (s) { return printed.indexOf(s) !== -1; });
+          if (t.minLines) ok = ok && printed.split("\n").filter(function (l) { return l.trim() !== ""; }).length >= t.minLines;
+          if (t.needCode) ok = ok && t.needCode.test(code.value);
+          if (t.needCodePrint) ok = ok && t.needCodePrint.test(code.value);
+          if (inputs.length && i < inputs.length) {
+            showResult(false, "El programa pidió menos datos de los esperados.", "Tiene que pedir " + datos(inputs.length) + " con input().");
+          } else if (extra) {
+            showResult(false, "El programa pidió más datos de los esperados.", inputs.length ? "Tiene que pedir " + datos(inputs.length) + "." : "En este paso no hace falta input().");
+          } else if (ok) {
+            showResult(true, "¡Correcto!", t.ok);
+            store.set(KEY + "done:" + id, "1");
+            renderProgress();
+          } else {
+            showResult(false, "Todavía no.", t.fail);
+          }
+        })
+        .catch(function (e) {
+          if (transcript) write(transcript);
+          if (stopRequested) { write("\n— Programa detenido —", "muted"); return; }
+          showError(describeError(e));
+          showResult(false, "El programa tiene un error.", "Lean la pista en la consola, corrijan y vuelvan a comprobar.");
+        })
+        .then(function () { mine = false; setBusy(false); });
+    }
+
+    var resetArmed = null;
+    btnReset.addEventListener("click", function () {
+      if (!resetArmed) {
+        btnReset.textContent = "¿Seguro? Toquen de nuevo";
+        resetArmed = setTimeout(function () { resetArmed = null; btnReset.textContent = "Volver al código inicial"; }, 3000);
+        return;
+      }
+      clearTimeout(resetArmed); resetArmed = null;
+      btnReset.textContent = "Volver al código inicial";
+      code.value = cfg.starter;
+      store.set(KEY + id, cfg.starter);
+      rows(); clearConsole(true); result.hidden = true;
+    });
+    btnStop.addEventListener("click", function () {
+      stopRequested = true;
+      if (pendingInput) {
+        var err = new Error("Programa detenido"); err.tp$name = "Detenido";
+        pendingInput.el.remove();
+        var r = pendingInput.reject; pendingInput = null;
+        r(err);
+      }
+    });
+    btnRun.addEventListener("click", run);
+    btnCheck.addEventListener("click", check);
+
+    return {
+      refresh: function () {
+        btnRun.disabled = busy || !ready;
+        btnCheck.disabled = busy || !ready;
+        btnReset.disabled = busy && mine;
+        btnStop.hidden = !(busy && mine);
+        btnRun.textContent = busy && mine ? "Ejecutando…" : "Ejecutar";
+      },
+      code: function () { return code.value; },
+      output: function () { return lastOutput; }
+    };
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll("[data-lab]"), function (root) {
+    var id = root.getAttribute("data-lab");
+    labs[id] = createLab(root, id, LABS[id]);
+  });
+  setBusy(false);
+
+  /* ---------- Guardar el trabajo ---------- */
+  var progressEl = document.getElementById("progress");
+  var totalEl = document.getElementById("progress-total");
+  function isDone(id) { return store.get(KEY + "done:" + id) === "1"; }
+  function renderProgress() {
+    progressEl.innerHTML = "";
+    var count = 0;
+    ORDER.forEach(function (id) {
+      var done = isDone(id);
+      if (done) count++;
+      var li = el("li");
+      li.appendChild(el("span", null, LABS[id].title));
+      li.appendChild(el("span", "pill " + (done ? "done" : "todo"), done ? "Comprobado" : "Sin comprobar"));
+      progressEl.appendChild(li);
+    });
+    totalEl.textContent = "Comprobados: " + count + " de " + ORDER.length;
+  }
+  renderProgress();
+
+  var nameEl = document.getElementById("student-name");
+  var msgEl = document.getElementById("save-msg");
+  var btnPdf = document.getElementById("btn-pdf");
+  var savedName = store.get(KEY + "name");
+  if (savedName) nameEl.value = savedName;
+  nameEl.addEventListener("input", function () { store.set(KEY + "name", nameEl.value); msgEl.textContent = ""; });
+
+  function say(text, kind) { msgEl.className = "save-msg" + (kind ? " " + kind : ""); msgEl.textContent = text; }
+
+  btnPdf.addEventListener("click", function () {
+    var name = nameEl.value.trim();
+    if (!name) { say("Escriban su nombre antes de guardar.", "bad"); nameEl.focus(); return; }
+    if (!(window.jspdf && window.jspdf.jsPDF)) { say("No se pudo cargar la herramienta para crear el PDF. Revisen la conexión a internet y recarguen la página.", "bad"); return; }
+    var items = ORDER.map(function (id) {
+      return { title: LABS[id].title, code: labs[id].code(), output: labs[id].output(), done: isDone(id) };
+    });
+    var info = {
+      title: "Del pseudocódigo a Python · Clase 1",
+      course: "1° EMS · Ciencias Computacionales y Tecnologías Digitales · Prof. Pablo Montaña",
+      name: name,
+      date: new Date().toLocaleDateString("es-UY", { day: "2-digit", month: "2-digit", year: "numeric" }),
+      doneCount: items.filter(function (x) { return x.done; }).length,
+      items: items
+    };
+    var safe = name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Za-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60) || "estudiante";
+    var filename = "Clase1-Python-" + safe + ".pdf";
+    try {
+      buildPdf(window.jspdf.jsPDF, info).save(filename);
+      say("Listo: se descargó " + filename + ". Búsquenlo en la carpeta de descargas.", "ok");
+    } catch (e) {
+      say("No se pudo armar el PDF. Recarguen la página y vuelvan a intentar.", "bad");
+    }
+  });
+})();
+</script>
+</body>
+</html>
